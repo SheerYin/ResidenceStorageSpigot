@@ -1,0 +1,19 @@
+main: io.github.yin.residencestoragespigot.Main
+name: 'ResidenceStorageSpigot'
+version: '{pluginVersion}'
+description: ''
+api-version: '1.16'
+author: [尹]
+prefix: '领地储存'
+libraries:
+  - org.jetbrains.kotlin:kotlin-stdlib:1.9.23
+  - redis.clients:jedis:5.1.2
+  - com.zaxxer:HikariCP:5.1.0
+
+commands:
+  residencestoragespigot:
+    aliases: [residencestorage, rs]
+    permission: 'residencestoragespigot.command'
+permissions:
+  residencestoragespigot.command:
+    default: 'op'

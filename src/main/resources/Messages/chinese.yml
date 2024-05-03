@@ -1,0 +1,10 @@
+command:
+  help:
+    - §f[§7领地储存§f] 主命令 /residencestoragespigot 缩写 /rs
+    - §f[§7领地储存§f] 导入数据 /rs import
+  import-conflict: '§f[§7领地储存§f] 冲突列表 {0}'
+  import-complete: '§f[§7领地储存§f] 数据导入完成'
+  only-player-execute: '§f[§7领地储存§f] 只有玩家才能执行此命令'
+
+permission:
+  no-permission: '§f[§7领地储存§f]  您没有 {0} 权限'
