@@ -38,7 +38,7 @@ object ResidenceFlagChange : Listener {
                         FlagState.FALSE -> false
                         else -> null
                     }
-                    val playerUUID = event.player.uniqueId.toString()
+                    val playerUUID = event.player.uniqueId
                     state?.let {
                         ResidenceMySQLStorage.setPlayerFlags(residenceName, playerUUID, event.flag, it)
                     } ?: ResidenceMySQLStorage.removePlayerFlags(residenceName, playerUUID, event.flag)

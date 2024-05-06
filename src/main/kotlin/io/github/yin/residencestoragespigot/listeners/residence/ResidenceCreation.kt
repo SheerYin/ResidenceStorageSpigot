@@ -22,9 +22,8 @@ object ResidenceCreation : Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     fun onResidenceCreation(event: ResidenceCreationEvent) {
 
-
         val player = event.player
-        val names = ResidenceMySQLStorage.getOwnerUUIDResidenceNames(player.uniqueId.toString())
+        val names = ResidenceMySQLStorage.getOwnerUUIDResidenceNames(player.uniqueId)
         val residenceName = event.residenceName
         // 玩家领地总数有没有大于 config 的 residences.amount 权限
         // 有没有重名
@@ -32,9 +31,9 @@ object ResidenceCreation : Listener {
             event.isCancelled = true
         }
 
+        val ownerUUID = player.uniqueId.toString()
+        val owner = player.displayName
         val residence = event.residence
-        val ownerUUID = residence.ownerUUID.toString()
-        val owner = residence.owner
         val permissions = residence.permissions
 
         Bukkit.getScheduler().runTaskLaterAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {

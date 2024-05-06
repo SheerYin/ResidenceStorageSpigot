@@ -24,47 +24,59 @@ object ResidenceCommand : Listener {
             return
         }
 
-        val args = event.args
-        if (args.isEmpty() || args.size < 2) {
+        val arguments = event.args
+        if (arguments.isEmpty()) {
             return
         }
 
-        val subCommand = args[0].lowercase()
-        val residenceName = args[1]
 
-        when (subCommand) {
-            "teleport", "tp" -> {
-
-                val uuid = player.uniqueId
-                if (Residence.getInstance().playerManager.getResidenceList(uuid).contains(residenceName)) {
-                    return
-                }
-
-                val residenceInfo = ResidenceMySQLStorage.getResidence(residenceName) ?: return
-                val ownerUUID = uuid.toString()
-                if (residenceInfo.ownerUUID == ownerUUID || residenceInfo.residenceFlags["tp"] == true || residenceInfo.playerFlags[ownerUUID]?.get(
-                        "tp"
-                    ) == true
-                ) {
-                    event.isCancelled = true
-                    Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
-
-                        val byteArrayOutputStream = ByteArrayOutputStream()
-                        val output = DataOutputStream(byteArrayOutputStream)
-                        output.writeUTF(residenceName)
-                        output.writeUTF(residenceInfo.serverName)
-                        player.sendPluginMessage(
-                            ResidenceStorageSpigotMain.instance,
-                            ResidenceStorageSpigotMain.pluginChannel,
-                            byteArrayOutputStream.toByteArray()
-                        )
-
-                    })
-                }
+        when (arguments.size) {
+            1 -> {
+//                val argument = arguments[0].lowercase(Locale.getDefault())
+//                if (argument == "listall") {
+//                    event.isCancelled = true
+//                    player.sendMessage()
+//                } else if (argument == "list") {
+//                    event.isCancelled = true
+//                    player.sendMessage()
+//                }
             }
+            2 -> {
 
-            "list" -> {
-                // 处理列表命令
+                when (arguments[0].lowercase()) {
+                    "teleport", "tp" -> {
+                        val residenceName = arguments[1]
+                        val uuid = player.uniqueId
+                        if (Residence.getInstance().playerManager.getResidenceList(uuid).contains(residenceName)) {
+                            return
+                        }
+
+                        val residenceInfo = ResidenceMySQLStorage.getResidence(residenceName) ?: return
+                        val ownerUUID = uuid.toString()
+                        if (residenceInfo.ownerUUID == ownerUUID || residenceInfo.residenceFlags["tp"] == true || residenceInfo.playerFlags[ownerUUID]?.get("tp") == true) {
+                            event.isCancelled = true
+                            Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+
+                                val byteArrayOutputStream = ByteArrayOutputStream()
+                                val output = DataOutputStream(byteArrayOutputStream)
+                                output.writeUTF(residenceName)
+                                output.writeUTF(residenceInfo.serverName)
+                                player.sendPluginMessage(
+                                    ResidenceStorageSpigotMain.instance,
+                                    ResidenceStorageSpigotMain.pluginChannel,
+                                    byteArrayOutputStream.toByteArray()
+                                )
+
+                            })
+                        }
+                    }
+
+                    "list" -> {
+                        val target = arguments[1]
+                        val a = ResidenceMySQLStorage.getOwnerResidenceNames(target)
+                        player.sendMessage("玩家 $target 领地列表 $a")
+                    }
+                }
             }
         }
     }

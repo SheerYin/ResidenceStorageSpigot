@@ -1,6 +1,8 @@
 command:
   help:
     - §f[§7领地储存§f] 主命令 /residencestoragespigot 缩写 /rs
+    - §f[§7领地储存§f] 玩家列表 /re list [player]
+    - §f[§7领地储存§f] 所有列表 /rs listall
     - §f[§7领地储存§f] 导入数据 /rs import
   import-conflict: '§f[§7领地储存§f] 冲突列表 {0}'
   import-complete: '§f[§7领地储存§f] 数据导入完成'

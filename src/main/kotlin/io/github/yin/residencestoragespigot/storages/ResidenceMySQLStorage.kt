@@ -6,6 +6,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.yin.residencestoragespigot.supports.ResidenceInfo
 import java.sql.Connection
+import java.util.UUID
 
 
 object ResidenceMySQLStorage {
@@ -211,12 +212,12 @@ object ResidenceMySQLStorage {
         }
     }
 
-    fun hasOwnerUUIDResidenceName(ownerUUID: String, residenceName: String): Boolean {
+    fun hasOwnerUUIDResidenceName(ownerUUID: UUID, residenceName: String): Boolean {
         val table = tablePrefix + "residences"
         val sql = "SELECT EXISTS (SELECT 1 FROM $table WHERE owner_uuid = ? AND residence_name = ?)"
         getConnection().use { connection: Connection ->
             connection.prepareStatement(sql).use { preparedStatement ->
-                preparedStatement.setString(1, ownerUUID)
+                preparedStatement.setString(1, ownerUUID.toString())
                 preparedStatement.setString(2, residenceName)
                 preparedStatement.executeQuery().use { resultSet ->
                     resultSet.next().let { return resultSet.getBoolean(1) }
@@ -225,13 +226,13 @@ object ResidenceMySQLStorage {
         }
     }
 
-    fun getOwnerUUIDResidenceNames(ownerUUID: String): MutableList<String> {
+    fun getOwnerUUIDResidenceNames(ownerUUID: UUID): MutableList<String> {
         val table = tablePrefix + "residences"
         val sql = "SELECT residence_name FROM $table WHERE owner_uuid = ?"
         val list: MutableList<String> = ArrayList()
         getConnection().use { connection: Connection ->
             connection.prepareStatement(sql).use { preparedStatement ->
-                preparedStatement.setString(1, ownerUUID)
+                preparedStatement.setString(1, ownerUUID.toString())
                 preparedStatement.executeQuery().use { resultSet ->
                     while (resultSet.next()) {
                         list.add(resultSet.getString("residence_name"))
@@ -243,14 +244,32 @@ object ResidenceMySQLStorage {
         return list
     }
 
-    fun getOwnerUUIDResidences(ownerUUID: String): List<ResidenceInfo> {
+    fun getOwnerResidenceNames(owner: String): MutableList<String> {
+        val table = tablePrefix + "residences"
+        val sql = "SELECT residence_name FROM $table WHERE owner = ?"
+        val list: MutableList<String> = ArrayList()
+        getConnection().use { connection: Connection ->
+            connection.prepareStatement(sql).use { preparedStatement ->
+                preparedStatement.setString(1, owner)
+                preparedStatement.executeQuery().use { resultSet ->
+                    while (resultSet.next()) {
+                        list.add(resultSet.getString("residence_name"))
+                    }
+                }
+
+            }
+        }
+        return list
+    }
+
+    fun getOwnerUUIDResidences(ownerUUID: UUID): List<ResidenceInfo> {
         val list: MutableList<ResidenceInfo> = ArrayList()
         val table = tablePrefix + "residences"
         val sql =
             "SELECT residence_name, owner_uuid, owner, residence_flags, player_flags, server_name FROM $table WHERE owner_uuid = ?"
         getConnection().use { connection: Connection ->
             connection.prepareStatement(sql).use { preparedStatement ->
-                preparedStatement.setString(1, ownerUUID)
+                preparedStatement.setString(1, ownerUUID.toString())
                 preparedStatement.executeQuery().use { resultSet ->
                     while (resultSet.next()) {
                         val residenceInfo = ResidenceInfo(
@@ -276,13 +295,46 @@ object ResidenceMySQLStorage {
         return list
     }
 
-    fun changeOwner(residenceName: String, ownerUUID: String, owner: String): Boolean {
+    fun getOwnerResidences(owner: String): List<ResidenceInfo> {
+        val list: MutableList<ResidenceInfo> = ArrayList()
+        val table = tablePrefix + "residences"
+        val sql =
+            "SELECT residence_name, owner_uuid, owner, residence_flags, player_flags, server_name FROM $table WHERE owner = ?"
+        getConnection().use { connection: Connection ->
+            connection.prepareStatement(sql).use { preparedStatement ->
+                preparedStatement.setString(1, owner)
+                preparedStatement.executeQuery().use { resultSet ->
+                    while (resultSet.next()) {
+                        val residenceInfo = ResidenceInfo(
+                            resultSet.getString("residence_name"),
+                            resultSet.getString("owner_uuid"),
+                            resultSet.getString("owner"),
+                            gson.fromJson(
+                                resultSet.getString("residence_flags"),
+                                object : TypeToken<MutableMap<String, Boolean>>() {}.type
+                            ),
+                            gson.fromJson(
+                                resultSet.getString("player_flags"),
+                                object : TypeToken<MutableMap<String, MutableMap<String, Boolean>>>() {}.type
+                            ),
+                            resultSet.getString("server_name")
+                        )
+                        list.add(residenceInfo)
+                    }
+                }
+            }
+
+        }
+        return list
+    }
+
+    fun changeOwner(residenceName: String, ownerUUID: UUID, owner: String): Boolean {
         val table = tablePrefix + "residences"
         val sql = "UPDATE $table SET uuid = ?, owner = ? WHERE residence_name = ?"
 
         getConnection().use { connection: Connection ->
             connection.prepareStatement(sql).use { preparedStatement ->
-                preparedStatement.setString(1, ownerUUID)
+                preparedStatement.setString(1, ownerUUID.toString())
                 preparedStatement.setString(2, owner)
                 preparedStatement.setString(3, residenceName)
                 return preparedStatement.executeUpdate() > 0
@@ -333,8 +385,8 @@ object ResidenceMySQLStorage {
         }
     }
 
-    fun setPlayerFlags(residenceName: String, playerUUID: String, key: String, value: Boolean): Boolean {
-        if (!playerUUID.matches(Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))) {
+    fun setPlayerFlags(residenceName: String, playerUUID: UUID, key: String, value: Boolean): Boolean {
+        if (!playerUUID.toString().matches(Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))) {
             return false
         }
         if (!key.matches(Regex("[a-zA-Z0-9]+"))) {
@@ -352,8 +404,8 @@ object ResidenceMySQLStorage {
         }
     }
 
-    fun removePlayerFlags(residenceName: String, playerUUID: String, key: String): Boolean {
-        if (!playerUUID.matches(Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))) {
+    fun removePlayerFlags(residenceName: String, playerUUID: UUID, key: String): Boolean {
+        if (!playerUUID.toString().matches(Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))) {
             return false
         }
         if (!key.matches(Regex("[a-zA-Z0-9]+"))) {
