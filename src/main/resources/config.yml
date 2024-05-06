@@ -17,3 +17,10 @@ residences:
     idle-timeout: 600000                             # 连接空闲的最长时间（毫秒），默认建议值 600000
     maximum-lifetime: 1800000                        # 连接在连接池中存活的最长时间（毫秒），默认建议值 1800000
     table-prefix: 'residence_'                       # 表前缀，常见的分隔符是 "_"
+
+  # 需要同时修改 Residence 的领地数量
+  amount:
+    # 权限是 residencestoragespigot.amount.player 允许玩家最多拥有 5 个领地
+    player: 5
+    # 权限是 residencestoragespigot.amount.member 允许玩家最多拥有 10 个领地。
+    member: 10
