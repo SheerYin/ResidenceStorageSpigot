@@ -57,8 +57,9 @@ object ResidenceCreation : Listener {
 
 
     private fun numberPermissions(player: Player): Int {
-        val section: ConfigurationSection = ConfigurationYAMLStorage.fileConfiguration.getConfigurationSection("residences.amount")!!
-        val map: Map<String,Int> = section.getKeys(false).associateBy({ it }, { section.getInt(it) })
+        val section: ConfigurationSection =
+            ConfigurationYAMLStorage.fileConfiguration.getConfigurationSection("residences.amount")!!
+        val map: Map<String, Int> = section.getKeys(false).associateBy({ it }, { section.getInt(it) })
 
         val sorted = map.entries.sortedByDescending { it.value }
         for (entry in sorted) {

@@ -111,7 +111,7 @@ object ResidenceRedisStorage {
         getResource().use { jedis ->
             val lockKey = prefixKey + "manage:lock"
             val lockValue = UUID.randomUUID().toString()
-            for (retry in 1 .. 10) {
+            for (retry in 1..10) {
                 val key: String? = jedis.set(lockKey, lockValue, SetParams().nx().ex(10))
                 if (key != null && key.equals("OK", ignoreCase = true)) {
                     var isEmpty = true
@@ -138,7 +138,8 @@ object ResidenceRedisStorage {
                     Thread.sleep(1000)
                 }
             }
-            val luaScript = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
+            val luaScript =
+                "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
             jedis.eval(luaScript, 1, lockKey, lockValue)
         }
     }
@@ -147,7 +148,7 @@ object ResidenceRedisStorage {
         val lockKey = prefixKey + "info:lock:" + residenceInfo.residenceName
         val lockValue = UUID.randomUUID().toString()
         getResource().use { jedis ->
-            for (retry in 1 .. 10) {
+            for (retry in 1..10) {
                 val key: String? = jedis.set(lockKey, lockValue, SetParams().nx().ex(1))
                 if (key != null && key.equals("OK", ignoreCase = true)) {
                     jedis.set(prefixKey + "info:" + residenceInfo.residenceName, gson.toJson(residenceInfo))
@@ -159,7 +160,8 @@ object ResidenceRedisStorage {
                     Thread.sleep(100)
                 }
             }
-            val luaScript = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
+            val luaScript =
+                "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
             jedis.eval(luaScript, 1, lockKey, lockValue)
         }
         return true

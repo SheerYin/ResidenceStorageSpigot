@@ -6,7 +6,7 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.yin.residencestoragespigot.supports.ResidenceInfo
 import java.sql.Connection
-import java.util.UUID
+import java.util.*
 
 
 object ResidenceMySQLStorage {
@@ -150,7 +150,7 @@ object ResidenceMySQLStorage {
         return residenceInfo
     }
 
-    fun getResidences(): MutableList<ResidenceInfo> {
+    fun getResidences(): List<ResidenceInfo> {
         val list = ArrayList<ResidenceInfo>()
 
         val table = tablePrefix + "residences"
@@ -181,7 +181,7 @@ object ResidenceMySQLStorage {
         return list
     }
 
-    fun getResidenceNames(): MutableList<String> {
+    fun getResidenceNames(): List<String> {
         val list = mutableListOf<String>()
 
         val table = tablePrefix + "residences"
@@ -226,7 +226,7 @@ object ResidenceMySQLStorage {
         }
     }
 
-    fun getOwnerUUIDResidenceNames(ownerUUID: UUID): MutableList<String> {
+    fun getOwnerUUIDResidenceNames(ownerUUID: UUID): List<String> {
         val table = tablePrefix + "residences"
         val sql = "SELECT residence_name FROM $table WHERE owner_uuid = ?"
         val list: MutableList<String> = ArrayList()
@@ -244,7 +244,7 @@ object ResidenceMySQLStorage {
         return list
     }
 
-    fun getOwnerResidenceNames(owner: String): MutableList<String> {
+    fun getOwnerResidenceNames(owner: String): List<String> {
         val table = tablePrefix + "residences"
         val sql = "SELECT residence_name FROM $table WHERE owner = ?"
         val list: MutableList<String> = ArrayList()
@@ -386,7 +386,9 @@ object ResidenceMySQLStorage {
     }
 
     fun setPlayerFlags(residenceName: String, playerUUID: UUID, key: String, value: Boolean): Boolean {
-        if (!playerUUID.toString().matches(Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))) {
+        if (!playerUUID.toString()
+                .matches(Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))
+        ) {
             return false
         }
         if (!key.matches(Regex("[a-zA-Z0-9]+"))) {
@@ -405,7 +407,9 @@ object ResidenceMySQLStorage {
     }
 
     fun removePlayerFlags(residenceName: String, playerUUID: UUID, key: String): Boolean {
-        if (!playerUUID.toString().matches(Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))) {
+        if (!playerUUID.toString()
+                .matches(Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))
+        ) {
             return false
         }
         if (!key.matches(Regex("[a-zA-Z0-9]+"))) {

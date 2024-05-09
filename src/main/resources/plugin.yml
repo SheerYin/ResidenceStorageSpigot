@@ -3,16 +3,16 @@ name: 'ResidenceStorageSpigot'
 version: '{pluginVersion}'
 description: ''
 api-version: '1.16'
-author: [尹]
+author: [ 尹 ]
 prefix: '领地储存'
-softdepend: [Residence, ServerNameSpigot]
+softdepend: [ Residence, ServerNameSpigot ]
 libraries:
   - org.jetbrains.kotlin:kotlin-stdlib:1.9.23
   - com.zaxxer:HikariCP:5.1.0
 
 commands:
   residencestoragespigot:
-    aliases: [residencestorage, rs]
+    aliases: [ residencestorage, rs ]
     permission: 'residencestoragespigot.command'
 permissions:
   residencestoragespigot.command:

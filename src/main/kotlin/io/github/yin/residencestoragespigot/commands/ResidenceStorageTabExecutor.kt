@@ -2,17 +2,25 @@ package io.github.yin.residencestoragespigot.commands
 
 import com.bekvon.bukkit.residence.Residence
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
+import io.github.yin.residencestoragespigot.storages.ConfigurationYAMLStorage
 import io.github.yin.residencestoragespigot.storages.MessageYAMLStorage
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
 import io.github.yin.residencestoragespigot.supports.ResidenceInfo
+import io.github.yin.residencestoragespigot.supports.ResidencePage
 import io.github.yin.residencestoragespigot.supports.TextProcess
 import io.github.yin.servernamespigot.ServerNameSpigotMain
+import net.md_5.bungee.chat.ComponentSerializer
+import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
 import org.bukkit.entity.Player
+import java.io.ByteArrayOutputStream
+import java.io.DataOutputStream
+import java.util.*
 
 object ResidenceStorageTabExecutor : TabExecutor {
+
     override fun onCommand(
         sender: CommandSender,
         command: Command,
@@ -21,59 +29,76 @@ object ResidenceStorageTabExecutor : TabExecutor {
     ): Boolean {
         when (arguments.size) {
             0 -> {
-                for (text in MessageYAMLStorage.fileConfiguration.getStringList("command.help")) {
-                    sender.sendMessage(text)
+                if (suggestion("help", "help", sender)) {
+                    processHelp(sender)
                 }
             }
 
             1 -> {
                 when {
                     suggestion(arguments[0], "help", sender) -> {
-                        for (text in MessageYAMLStorage.fileConfiguration.getStringList("command.help")) {
-                            sender.sendMessage(text)
+                        processHelp(sender)
+                    }
+
+                    suggestion(arguments[0], "list", sender) -> {
+                        (sender as? Player)?.let { player ->
+                            processList(player, player.displayName, "1")
                         }
+                            ?: sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.only-player-execute"))
+                    }
+
+                    suggestion(arguments[0], "listall", sender) -> {
+                        processAllList(sender, "1")
                     }
 
                     suggestion(arguments[0], "import", sender) -> {
                         (sender as? Player)?.let { player ->
-                            val residenceManager = Residence.getInstance().residenceManager
-
-                            val mysqlNames = ResidenceMySQLStorage.getResidenceNames()
-                            val localNames = ArrayList<String>()
-                            val residenceInfos = ArrayList<ResidenceInfo>()
-
-                            for (residence in residenceManager.residences) {
-                                val value = residence.value
-                                localNames.add(value.residenceName)
-                                residenceInfos.add(
-                                    ResidenceInfo(
-                                        value.residenceName,
-                                        value.ownerUUID.toString(),
-                                        value.residenceName,
-                                        value.permissions.flags,
-                                        value.permissions.playerFlags,
-                                        ServerNameSpigotMain.serverName
-                                    )
-                                )
-                            }
-
-                            val conflicts = conflictNames(mysqlNames, localNames)
-                            if (conflicts.isNotEmpty()) {
-                                player.sendMessage(
-                                    TextProcess.replace(
-                                        MessageYAMLStorage.fileConfiguration.getString("command.import-conflict")!!,
-                                        conflicts.toString()
-                                    )
-                                )
-                            } else {
-                                ResidenceMySQLStorage.addResidences(residenceInfos)
-                                player.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.import-complete"))
-                            }
-                        } ?: run {
-                            sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.only-player-execute"))
+                            processImport(player)
                         }
+                            ?: sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.only-player-execute"))
                     }
 
+                    suggestion(arguments[0], "reload", sender) -> {
+                        ConfigurationYAMLStorage.initialization(ResidenceStorageSpigotMain.instance.dataFolder)
+                        ConfigurationYAMLStorage.load()
+                        MessageYAMLStorage.initialization(ResidenceStorageSpigotMain.instance.dataFolder)
+                        MessageYAMLStorage.load()
+                        sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.reload"))
+                    }
+                }
+            }
+
+            2 -> {
+                when {
+                    suggestion(arguments[0], "list", sender) -> {
+                        processList(sender, arguments[1], "1")
+                    }
+
+                    suggestion(arguments[0], "listall", sender) -> {
+                        processAllList(sender, arguments[1])
+                    }
+                }
+            }
+
+            3 -> {
+                when {
+                    suggestion(arguments[0], "list", sender) -> {
+                        processList(sender, arguments[1], arguments[2])
+                    }
+
+                    suggestion(arguments[0], "teleport", sender) -> {
+                        val playerName = arguments[1]
+                        val player = Bukkit.getPlayer(playerName) ?: run {
+                            sender.sendMessage(
+                                TextProcess.replace(
+                                    MessageYAMLStorage.fileConfiguration.getString("command.player-does-not-exist")!!,
+                                    playerName
+                                )
+                            )
+                            return true
+                        }
+                        processTeleport(player, arguments[2])
+                    }
                 }
 
             }
@@ -87,20 +112,45 @@ object ResidenceStorageTabExecutor : TabExecutor {
         command: Command,
         label: String,
         arguments: Array<out String>
-    ): List<String> {
-        return when (arguments.size) {
+    ): List<String>? {
+        when (arguments.size) {
             1 -> {
-                listMatches(arguments[0], mutableListOf("help", "import"))
+                return listMatches(arguments[0], listOf("help", "list", "listall", "teleport", "import", "reload"))
             }
 
-            else -> {
-                emptyList()
+            2 -> {
+                when {
+                    arguments[0].equals("list", ignoreCase = true) -> {
+                        return null
+                    }
+
+                    arguments[0].equals("listall", ignoreCase = true) -> {
+                        return listOf("<page>")
+                    }
+
+                    arguments[0].equals("teleport", ignoreCase = true) -> {
+                        return null
+                    }
+                }
+            }
+
+            3 -> {
+                when {
+                    arguments[0].equals("list", ignoreCase = true) -> {
+                        return listOf("<page>")
+                    }
+
+                    arguments[0].equals("teleport", ignoreCase = true) -> {
+                        return listMatches(arguments[2], ResidenceMySQLStorage.getResidenceNames())
+                    }
+                }
             }
         }
+        return emptyList()
     }
 
-    private fun listMatches(argument: String, suggest: Iterable<String>): MutableList<String> {
-        return suggest.filter { it.contains(argument) }.toMutableList()
+    private fun listMatches(argument: String, suggest: Iterable<String>): List<String> {
+        return suggest.filter { it.contains(argument) }
     }
 
     private fun permissionMessage(sender: CommandSender, permission: String): Boolean {
@@ -127,10 +177,38 @@ object ResidenceStorageTabExecutor : TabExecutor {
     }
 
 
-    private fun conflictNames(list1: List<String>, list2: List<String>): List<String> {
+    private fun processHelp(sender: CommandSender) {
+        for (text in MessageYAMLStorage.fileConfiguration.getStringList("command.help")) {
+            sender.sendMessage(text)
+        }
+    }
+
+
+    private fun processImport(player: CommandSender) {
+        val residenceManager = Residence.getInstance().residenceManager
+
+        val mysqlNames = ResidenceMySQLStorage.getResidenceNames()
+        val localNames = ArrayList<String>()
+        val residenceInfos = ArrayList<ResidenceInfo>()
+
+        for (residence in residenceManager.residences) {
+            val value = residence.value
+            localNames.add(value.residenceName)
+            residenceInfos.add(
+                ResidenceInfo(
+                    value.residenceName,
+                    value.ownerUUID.toString(),
+                    value.residenceName,
+                    value.permissions.flags,
+                    value.permissions.playerFlags,
+                    ServerNameSpigotMain.serverName
+                )
+            )
+        }
+
         val duplicates = mutableListOf<String>()
-        val set1 = list1.toSet()
-        val set2 = list2.toSet()
+        val set1 = mysqlNames.toSet()
+        val set2 = localNames.toSet()
 
         for (element in set1) {
             if (element in set2) {
@@ -138,6 +216,196 @@ object ResidenceStorageTabExecutor : TabExecutor {
             }
         }
 
-        return duplicates
+        if (duplicates.isNotEmpty()) {
+            player.sendMessage(
+                TextProcess.replace(
+                    MessageYAMLStorage.fileConfiguration.getString("command.import-conflict")!!,
+                    duplicates.toString()
+                )
+            )
+        } else {
+            ResidenceMySQLStorage.addResidences(residenceInfos)
+            player.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.import-complete"))
+        }
     }
+
+
+    private fun processList(sender: CommandSender, playerName: String, pageString: String) {
+        val page: Int = pageString.toIntOrNull() ?: run {
+            sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.page-invalid"))
+            return
+        }
+
+        val names = ResidenceMySQLStorage.getOwnerResidenceNames(playerName)
+        if (names.isEmpty()) {
+            sender.sendMessage(
+                TextProcess.replace(
+                    MessageYAMLStorage.fileConfiguration.getString("command.player-page-no-residence")!!,
+                    playerName
+                )
+            )
+            return
+        }
+
+        // 从缓存获取数据
+        var list = ResidencePage.playerPage[playerName]
+        // 如果获取不到则从 mysql 加载并排序和分页
+        // 如果获取到了，判断是不是第一页，如果是，则再重新从 mysql 加载数据到缓存并排序和分页
+        if (list == null) {
+            val sortedNames = names.sortedBy { it.filter { char -> char.isDigit() }.toIntOrNull() ?: 0 }
+            ResidencePage.playerPage[playerName] = ResidencePage.split(sortedNames, 10)
+            list = ResidencePage.playerPage[playerName]!!
+        } else {
+            if (page == 1) {
+                val sortedNames = names.sortedBy { it -> it.filter { it.isDigit() }.toIntOrNull() ?: 0 }
+                ResidencePage.playerPage[playerName] = ResidencePage.split(sortedNames, 10)
+                list = ResidencePage.playerPage[playerName]!!
+            }
+        }
+
+        // 判断页数是不是无效的
+        if (page !in 1..list.size) {
+            sender.sendMessage(
+                TextProcess.replace(
+                    MessageYAMLStorage.fileConfiguration.getString("command.player-page-no")!!, page.toString()
+                )
+            )
+            return
+        }
+
+        sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.player-page-header"))
+
+        // 发送当前页的列表
+        for (name in list[page - 1]) {
+            val text = TextProcess.replace(
+                MessageYAMLStorage.fileConfiguration.getString("command.player-page-list")!!,
+                name,
+                playerName
+            )
+            val baseComponents = ComponentSerializer.parse(text)
+            sender.spigot().sendMessage(*baseComponents)
+        }
+
+        // 为了避免手贱访问第 1 页而给 mysql 增加负担
+        // val prevPage = maxOf(1, page - 1)
+        // val nextPage = minOf(list.size, page + 1)
+
+        // 发送页脚
+        val footerMessage = MessageYAMLStorage.fileConfiguration.getString("command.player-page-footer")!!
+        val text = TextProcess.replace(
+            footerMessage,
+            playerName,
+            page.toString(),
+            list.size.toString(),
+            (page - 1).toString(),
+            (page + 1).toString()
+        )
+        val baseComponents = ComponentSerializer.parse(text)
+        sender.spigot().sendMessage(*baseComponents)
+    }
+
+
+    private fun processAllList(sender: CommandSender, pageString: String) {
+        val page: Int = pageString.toIntOrNull() ?: run {
+            sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.page-invalid"))
+            return
+        }
+
+        val residenceInfos = ResidenceMySQLStorage.getResidences()
+        if (residenceInfos.isEmpty()) {
+            sender.sendMessage(TextProcess.replace(MessageYAMLStorage.fileConfiguration.getString("command.all-page-no-residence")!!))
+            return
+        }
+
+        if (ResidencePage.allPage.getOrNull(1) == null) {
+            val map: Map<String, ResidenceInfo> = residenceInfos.sortedBy { info ->
+                info.residenceName.filter { char -> char.isDigit() }.toIntOrNull() ?: 0
+            }.associateBy { it.residenceName }.toMutableMap()
+            ResidencePage.allPage = ResidencePage.allSplit(map, 10)
+        } else {
+            if (page == 1) {
+                val map: Map<String, ResidenceInfo> = residenceInfos.sortedBy { info ->
+                    info.residenceName.filter { char -> char.isDigit() }.toIntOrNull() ?: 0
+                }.associateBy { it.residenceName }.toMutableMap()
+                ResidencePage.allPage = ResidencePage.allSplit(map, 10)
+            }
+        }
+
+        // 判断页数是不是无效的
+        if (page !in 1..ResidencePage.allPage.size) {
+            sender.sendMessage(
+                TextProcess.replace(
+                    MessageYAMLStorage.fileConfiguration.getString("command.player-page-no")!!, page.toString()
+                )
+            )
+            return
+        }
+
+        sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.all-page-header"))
+
+        // 发送当前页的列表
+        for (name in ResidencePage.allPage[page - 1]) {
+            val value = name.value
+            val text = TextProcess.replace(
+                MessageYAMLStorage.fileConfiguration.getString("command.all-page-list")!!,
+                name.key,
+                value.owner,
+                value.serverName
+            )
+            val baseComponents = ComponentSerializer.parse(text)
+            sender.spigot().sendMessage(*baseComponents)
+        }
+
+        // 发送页脚
+        val footerMessage = MessageYAMLStorage.fileConfiguration.getString("command.all-page-footer")!!
+        val text = TextProcess.replace(
+            footerMessage,
+            page.toString(),
+            (ResidencePage.allPage.size).toString(),
+            (page - 1).toString(),
+            (page + 1).toString()
+        )
+        val baseComponents = ComponentSerializer.parse(text)
+        sender.spigot().sendMessage(*baseComponents)
+
+    }
+
+
+    // 该方法是无视权限直接传送
+    // 涉及复杂的权限判断的去看 ResidenceCommand 的 teleport()
+    private fun processTeleport(player: Player, residenceName: String) {
+        // 本地
+        val claimedResidence =
+            Residence.getInstance().residenceManager.residences[residenceName.lowercase(Locale.getDefault())]
+        claimedResidence?.let {
+            player.teleport(it.getTeleportLocation(player, true))
+            player.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.teleport"))
+            return
+        }
+
+        // 跨服
+        val residenceInfo = ResidenceMySQLStorage.getResidence(residenceName) ?: run {
+            player.sendMessage(
+                TextProcess.replace(
+                    MessageYAMLStorage.fileConfiguration.getString("command.teleport-no-residence")!!,
+                    residenceName
+                )
+            )
+            return
+        }
+        Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            val output = DataOutputStream(byteArrayOutputStream)
+            output.writeUTF(residenceName)
+            output.writeUTF(residenceInfo.serverName)
+            player.sendPluginMessage(
+                ResidenceStorageSpigotMain.instance,
+                ResidenceStorageSpigotMain.pluginChannel,
+                byteArrayOutputStream.toByteArray()
+            )
+            player.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.teleport"))
+        })
+    }
+
 }
+
