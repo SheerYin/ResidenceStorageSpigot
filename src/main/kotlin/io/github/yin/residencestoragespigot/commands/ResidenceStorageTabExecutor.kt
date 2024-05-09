@@ -403,8 +403,8 @@ object ResidenceStorageTabExecutor : TabExecutor {
                 ResidenceStorageSpigotMain.pluginChannel,
                 byteArrayOutputStream.toByteArray()
             )
-            player.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.teleport"))
         })
+        player.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.teleport"))
     }
 
 }

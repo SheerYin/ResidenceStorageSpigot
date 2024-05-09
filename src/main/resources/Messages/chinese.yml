@@ -33,7 +33,7 @@ command:
   all-page-header: ''
   all-page-list: >
     [""
-    ,{"text":"§f[§7领地储存§f] 领地 {0} 所有者 {1} 服务器 {2}","clickEvent":{"action":"run_command","value":"/residence tp {0}"},"hoverEvent":{"action":"show_text","contents":"§f[左键单击]\n传送"}}
+    ,{"text":"§f[§7领地储存§f] 领地 {0} 所有者 {1} 服务器 {2}","clickEvent":{"action":"run_command","value":"/residencestoragespigot teleport {0} {1}"},"hoverEvent":{"action":"show_text","contents":"§f[左键单击]\n传送"}}
     ]
   all-page-footer: >
     [""
