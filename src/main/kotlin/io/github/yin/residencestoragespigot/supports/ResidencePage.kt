@@ -1,11 +1,12 @@
 package io.github.yin.residencestoragespigot.supports
 
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.CopyOnWriteArrayList
 
 object ResidencePage {
     val playerPage = ConcurrentHashMap<String, CopyOnWriteArrayList<CopyOnWriteArrayList<String>>>()
-    var allPage = CopyOnWriteArrayList<ConcurrentHashMap<String, ResidenceInfo>>()
+    var allPage = CopyOnWriteArrayList<ConcurrentSkipListMap<String, ResidenceInfo>>()
 
     fun split(original: List<String>, pageSize: Int): CopyOnWriteArrayList<CopyOnWriteArrayList<String>> {
         if (original.isEmpty()) {
@@ -24,13 +25,13 @@ object ResidencePage {
     fun allSplit(
         map: Map<String, ResidenceInfo>,
         pageSize: Int
-    ): CopyOnWriteArrayList<ConcurrentHashMap<String, ResidenceInfo>> {
+    ): CopyOnWriteArrayList<ConcurrentSkipListMap<String, ResidenceInfo>> {
 
         val entries = map.entries.toList()
-        val list = CopyOnWriteArrayList<ConcurrentHashMap<String, ResidenceInfo>>()
+        val list = CopyOnWriteArrayList<ConcurrentSkipListMap<String, ResidenceInfo>>()
 
         entries.chunked(pageSize).forEach { chunk ->
-            val pageMap = ConcurrentHashMap<String, ResidenceInfo>()
+            val pageMap = ConcurrentSkipListMap<String, ResidenceInfo>()
             chunk.forEach { entry ->
                 pageMap[entry.key] = entry.value
             }
