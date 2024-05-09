@@ -354,8 +354,9 @@ object ResidenceMySQLStorage {
         }
     }
 
+    private val regexFlagName = Regex("[a-zA-Z0-9]+")
     fun setResidenceFlags(residenceName: String, key: String, value: Boolean): Boolean {
-        if (!key.matches("[a-zA-Z0-9]+".toRegex())) {
+        if (!key.matches(regexFlagName)) {
             return false
         }
 
@@ -371,7 +372,7 @@ object ResidenceMySQLStorage {
     }
 
     fun removeResidenceFlags(residenceName: String, key: String): Boolean {
-        if (!key.matches("[a-zA-Z0-9]+".toRegex())) {
+        if (!key.matches(regexFlagName)) {
             return false
         }
 
@@ -385,13 +386,12 @@ object ResidenceMySQLStorage {
         }
     }
 
+    private val regexPlayerUUID = Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
     fun setPlayerFlags(residenceName: String, playerUUID: UUID, key: String, value: Boolean): Boolean {
-        if (!playerUUID.toString()
-                .matches(Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))
-        ) {
+        if (!playerUUID.toString().matches(regexPlayerUUID)) {
             return false
         }
-        if (!key.matches(Regex("[a-zA-Z0-9]+"))) {
+        if (!key.matches(regexFlagName)) {
             return false
         }
         val table = tablePrefix + "residences"
@@ -407,12 +407,10 @@ object ResidenceMySQLStorage {
     }
 
     fun removePlayerFlags(residenceName: String, playerUUID: UUID, key: String): Boolean {
-        if (!playerUUID.toString()
-                .matches(Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))
-        ) {
+        if (!playerUUID.toString().matches(regexPlayerUUID)) {
             return false
         }
-        if (!key.matches(Regex("[a-zA-Z0-9]+"))) {
+        if (!key.matches(regexFlagName)) {
             return false
         }
 
