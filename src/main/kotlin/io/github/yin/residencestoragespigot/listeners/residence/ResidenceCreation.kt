@@ -29,6 +29,7 @@ object ResidenceCreation : Listener {
         // 有没有重名
         if (names.size > numberPermissions(player) || names.contains(residenceName)) {
             event.isCancelled = true
+            return
         }
 
         val ownerUUID = player.uniqueId.toString()
