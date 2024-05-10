@@ -7,9 +7,7 @@ command:
     - §f[§7领地储存§f] 导入数据 /rs import
     - §f[§7领地储存§f] 重新加载 /rs reload
 
-  import-conflict: '§f[§7领地储存§f] 冲突列表 {0}'
-  import-complete: '§f[§7领地储存§f] 数据导入完成'
-  only-player-execute: '§f[§7领地储存§f] 只有玩家才能执行此命令'
+  create-amount-limit: '§f[§7领地储存§f] 数量已达到 {0} / {1} 限制'
 
   page-invalid: '§f[§7领地储存§f] 页不是整数'
 
@@ -47,7 +45,10 @@ command:
   teleport-no-residence: '§f[§7领地储存§f] 领地 {0} 不存在'
   teleport: '§f[§7领地储存§f] 开始传送'
 
-  reload: '§f[§7领地储存§f] 重新加载配置文件与语言文件'
+  import-conflict: '§f[§7领地储存§f] 冲突列表 {0}'
+  import-complete: '§f[§7领地储存§f] 数据导入完成'
+  only-player-execute: '§f[§7领地储存§f] 只有玩家才能执行此命令'
 
+  reload: '§f[§7领地储存§f] 重新加载配置文件与语言文件'
 permission:
   no-permission: '§f[§7领地储存§f] 您没有 {0} 权限'

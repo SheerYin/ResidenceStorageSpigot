@@ -5,8 +5,10 @@ import com.bekvon.bukkit.residence.event.ResidenceCreationEvent
 import io.github.yin.proxyinfospigot.ProxyInfoSpigotMain
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
 import io.github.yin.residencestoragespigot.storages.ConfigurationYAMLStorage
+import io.github.yin.residencestoragespigot.storages.MessageYAMLStorage
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
 import io.github.yin.residencestoragespigot.supports.ResidenceInfo
+import io.github.yin.residencestoragespigot.supports.TextProcess
 import org.bukkit.Bukkit
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
@@ -26,7 +28,15 @@ object ResidenceCreation : Listener {
         val residenceName = event.residenceName
         // 玩家领地总数有没有大于 config 的 residences.amount 权限
         // 有没有重名
-        if (names.size > numberPermissions(player) || names.contains(residenceName)) {
+        val number = numberPermissions(player)
+        if (names.size >= number || names.contains(residenceName)) {
+            player.sendMessage(
+                TextProcess.replace(
+                    MessageYAMLStorage.fileConfiguration.getString("command.create-amount-limit")!!,
+                    (names.size).toString(),
+                    number.toString()
+                )
+            )
             event.isCancelled = true
             return
         }

@@ -17,7 +17,6 @@ import org.bukkit.command.TabExecutor
 import org.bukkit.entity.Player
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
-import java.util.*
 
 object ResidenceStorageTabExecutor : TabExecutor {
 
@@ -45,7 +44,8 @@ object ResidenceStorageTabExecutor : TabExecutor {
                             Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
                                 processList(player, player.displayName, "1")
                             })
-                        } ?: sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.only-player-execute"))
+                        }
+                            ?: sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.only-player-execute"))
                     }
 
                     suggestion(arguments[0], "listall", sender) -> {
@@ -393,7 +393,12 @@ object ResidenceStorageTabExecutor : TabExecutor {
 
         // 跨服
         val residenceInfo = ResidenceMySQLStorage.getResidence(residenceName) ?: run {
-            sender.sendMessage(TextProcess.replace(MessageYAMLStorage.fileConfiguration.getString("command.teleport-no-residence")!!, residenceName))
+            sender.sendMessage(
+                TextProcess.replace(
+                    MessageYAMLStorage.fileConfiguration.getString("command.teleport-no-residence")!!,
+                    residenceName
+                )
+            )
             return
         }
 

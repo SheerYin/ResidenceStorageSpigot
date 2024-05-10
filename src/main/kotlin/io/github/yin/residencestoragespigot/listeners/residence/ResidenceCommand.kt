@@ -115,8 +115,8 @@ object ResidenceCommand : Listener {
                 DataOutputStream(byteArrayOutputStream).use { out ->
                     out.writeUTF("teleport")
                     out.writeUTF(player.displayName)
-                    out.writeUTF(residenceInfo.serverName)
                     out.writeUTF(residenceName)
+                    out.writeUTF(residenceInfo.serverName)
                 }
                 player.sendPluginMessage(
                     ResidenceStorageSpigotMain.instance,
