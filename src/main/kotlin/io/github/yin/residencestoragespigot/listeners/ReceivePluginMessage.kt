@@ -15,6 +15,11 @@ object ReceivePluginMessage : PluginMessageListener {
     override fun onPluginMessageReceived(channel: String, player: Player, message: ByteArray) {
         if (channel == pluginChannel) {
             DataInputStream(ByteArrayInputStream(message)).use { input ->
+                val action = input.readUTF().lowercase()
+                if (action != ("teleport")) {
+                    return
+                }
+
                 val residenceName = input.readUTF()
                 val claimedResidence =
                     Residence.getInstance().residenceManager.residences[residenceName.lowercase(Locale.getDefault())]

@@ -5,7 +5,7 @@ description: ''
 api-version: '1.16'
 author: [ 尹 ]
 prefix: '领地储存'
-softdepend: [ Residence, ServerNameSpigot ]
+softdepend: [ Residence, ProxyInfoSpigot ]
 libraries:
   - org.jetbrains.kotlin:kotlin-stdlib:1.9.23
   - com.zaxxer:HikariCP:5.1.0

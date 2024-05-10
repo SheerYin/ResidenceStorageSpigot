@@ -42,28 +42,35 @@ object ResidenceStorageTabExecutor : TabExecutor {
 
                     suggestion(arguments[0], "list", sender) -> {
                         (sender as? Player)?.let { player ->
-                            processList(player, player.displayName, "1")
-                        }
-                            ?: sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.only-player-execute"))
+                            Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                                processList(player, player.displayName, "1")
+                            })
+                        } ?: sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.only-player-execute"))
                     }
 
                     suggestion(arguments[0], "listall", sender) -> {
-                        processAllList(sender, "1")
+                        Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                            processAllList(sender, "1")
+                        })
                     }
 
                     suggestion(arguments[0], "import", sender) -> {
                         (sender as? Player)?.let { player ->
-                            processImport(player)
+                            Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                                processImport(player)
+                            })
                         }
                             ?: sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.only-player-execute"))
                     }
 
                     suggestion(arguments[0], "reload", sender) -> {
-                        ConfigurationYAMLStorage.initialization(ResidenceStorageSpigotMain.instance.dataFolder)
-                        ConfigurationYAMLStorage.load()
-                        MessageYAMLStorage.initialization(ResidenceStorageSpigotMain.instance.dataFolder)
-                        MessageYAMLStorage.load()
-                        sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.reload"))
+                        Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                            ConfigurationYAMLStorage.initialization(ResidenceStorageSpigotMain.instance.dataFolder)
+                            ConfigurationYAMLStorage.load()
+                            MessageYAMLStorage.initialization(ResidenceStorageSpigotMain.instance.dataFolder)
+                            MessageYAMLStorage.load()
+                            sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.reload"))
+                        })
                     }
                 }
             }
@@ -71,11 +78,15 @@ object ResidenceStorageTabExecutor : TabExecutor {
             2 -> {
                 when {
                     suggestion(arguments[0], "list", sender) -> {
-                        processList(sender, arguments[1], "1")
+                        Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                            processList(sender, arguments[1], "1")
+                        })
                     }
 
                     suggestion(arguments[0], "listall", sender) -> {
-                        processAllList(sender, arguments[1])
+                        Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                            processAllList(sender, arguments[1])
+                        })
                     }
                 }
             }
@@ -83,11 +94,16 @@ object ResidenceStorageTabExecutor : TabExecutor {
             3 -> {
                 when {
                     suggestion(arguments[0], "list", sender) -> {
-                        processList(sender, arguments[1], arguments[2])
+                        Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                            processList(sender, arguments[1], arguments[2])
+                        })
+
                     }
 
                     suggestion(arguments[0], "teleport", sender) -> {
-                        processTeleport(sender, arguments[1], arguments[2])
+                        Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                            processTeleport(sender, arguments[1], arguments[2])
+                        })
                     }
                 }
 
@@ -385,8 +401,8 @@ object ResidenceStorageTabExecutor : TabExecutor {
         DataOutputStream(byteArrayOutputStream).use { out ->
             out.writeUTF("teleport")
             out.writeUTF(playerName)
-            out.writeUTF(residenceInfo.serverName)
             out.writeUTF(residenceName)
+            out.writeUTF(residenceInfo.serverName)
         }
         Bukkit.getOnlinePlayers().first().sendPluginMessage(
             ResidenceStorageSpigotMain.instance,
