@@ -8,7 +8,6 @@ import io.github.yin.residencestoragespigot.supports.ResidenceInfo
 import java.sql.Connection
 import java.util.*
 
-
 object ResidenceMySQLStorage {
 
     class Parameter(

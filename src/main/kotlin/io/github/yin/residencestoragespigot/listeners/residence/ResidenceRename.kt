@@ -1,6 +1,5 @@
 package io.github.yin.residencestoragespigot.listeners.residence
 
-
 import com.bekvon.bukkit.residence.event.ResidenceRenameEvent
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage

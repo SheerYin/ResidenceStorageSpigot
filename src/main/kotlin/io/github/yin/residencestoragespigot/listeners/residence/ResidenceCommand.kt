@@ -17,7 +17,6 @@ import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.util.*
 
-
 object ResidenceCommand : Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
@@ -113,9 +112,12 @@ object ResidenceCommand : Listener {
             event.isCancelled = true
             Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
                 val byteArrayOutputStream = ByteArrayOutputStream()
-                val output = DataOutputStream(byteArrayOutputStream)
-                output.writeUTF(residenceName)
-                output.writeUTF(residenceInfo.serverName)
+                DataOutputStream(byteArrayOutputStream).use { out ->
+                    out.writeUTF("teleport")
+                    out.writeUTF(player.displayName)
+                    out.writeUTF(residenceInfo.serverName)
+                    out.writeUTF(residenceName)
+                }
                 player.sendPluginMessage(
                     ResidenceStorageSpigotMain.instance,
                     ResidenceStorageSpigotMain.pluginChannel,

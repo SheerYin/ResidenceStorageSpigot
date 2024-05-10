@@ -7,7 +7,6 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 
-
 object ConfigurationYAMLStorage {
 
     private lateinit var path: Path

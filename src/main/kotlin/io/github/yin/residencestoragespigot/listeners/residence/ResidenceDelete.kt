@@ -8,7 +8,6 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 
-
 object ResidenceDelete : Listener {
 
     // 领地被删除 前 时才会触发

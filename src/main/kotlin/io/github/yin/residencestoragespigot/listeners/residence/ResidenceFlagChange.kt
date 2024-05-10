@@ -10,7 +10,6 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 
-
 object ResidenceFlagChange : Listener {
 
     // Flags 被修改 前 时才会触发

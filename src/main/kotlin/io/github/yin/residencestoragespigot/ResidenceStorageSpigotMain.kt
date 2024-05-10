@@ -9,7 +9,6 @@ import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 
-
 class ResidenceStorageSpigotMain : JavaPlugin() {
 
     companion object {

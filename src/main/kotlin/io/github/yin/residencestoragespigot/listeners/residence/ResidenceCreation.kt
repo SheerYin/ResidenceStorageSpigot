@@ -2,11 +2,11 @@ package io.github.yin.residencestoragespigot.listeners.residence
 
 import com.bekvon.bukkit.residence.Residence
 import com.bekvon.bukkit.residence.event.ResidenceCreationEvent
+import io.github.yin.proxyinfospigot.ProxyInfoSpigotMain
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
 import io.github.yin.residencestoragespigot.storages.ConfigurationYAMLStorage
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
 import io.github.yin.residencestoragespigot.supports.ResidenceInfo
-import io.github.yin.servernamespigot.ServerNameSpigotMain
 import org.bukkit.Bukkit
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
@@ -14,7 +14,6 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import java.util.*
-
 
 object ResidenceCreation : Listener {
 
@@ -48,7 +47,7 @@ object ResidenceCreation : Listener {
                         owner,
                         permissions.flags,
                         permissions.playerFlags,
-                        ServerNameSpigotMain.serverName
+                        ProxyInfoSpigotMain.serverName
                     )
                 ResidenceMySQLStorage.addResidence(residenceInfo)
             }
