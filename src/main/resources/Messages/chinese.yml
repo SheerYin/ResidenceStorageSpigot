@@ -41,6 +41,7 @@ command:
     ,{"text":" [下一页]","clickEvent":{"action":"run_command","value":"/residencestoragespigot listall {3}"},"hoverEvent":{"action":"show_text","contents":"§f[左键单击]\n下一页"}}
     ]
 
+  teleport-no-online-player: '§f[§7领地储存§f] 执行此命令这个子服最少需要一个在线玩家'
   player-does-not-exist: '§f[§7领地储存§f] 玩家不存在或不在线'
   teleport-no-residence: '§f[§7领地储存§f] 领地 {0} 不存在'
   teleport: '§f[§7领地储存§f] 开始传送'

@@ -19,7 +19,7 @@ repositories {
 dependencies {
     compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT")
     implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation(files("libraries/ProxyInfoSpigot.jar"))
+    // implementation(files("libraries/ProxyInfoSpigot.jar"))
     implementation(files("libraries/Residence.jar"))
 }
 

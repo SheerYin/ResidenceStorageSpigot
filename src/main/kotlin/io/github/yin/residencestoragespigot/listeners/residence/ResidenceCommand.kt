@@ -111,12 +111,34 @@ object ResidenceCommand : Listener {
         ) {
             event.isCancelled = true
             Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                val serverName = residenceInfo.serverName
+
                 val byteArrayOutputStream = ByteArrayOutputStream()
-                DataOutputStream(byteArrayOutputStream).use { out ->
-                    out.writeUTF("teleport")
-                    out.writeUTF(player.displayName)
-                    out.writeUTF(residenceName)
-                    out.writeUTF(residenceInfo.serverName)
+                // 跨服传送
+                DataOutputStream(byteArrayOutputStream).use { output ->
+                    output.writeUTF("Connect")
+                    output.writeUTF(serverName)
+                }
+                player.sendPluginMessage(
+                    ResidenceStorageSpigotMain.instance,
+                    ResidenceStorageSpigotMain.pluginChannel,
+                    byteArrayOutputStream.toByteArray()
+                )
+
+                byteArrayOutputStream.reset()
+                // 消息
+                DataOutputStream(byteArrayOutputStream).use { output ->
+                    output.writeUTF("Forward")
+                    output.writeUTF(serverName)
+                    output.writeUTF("residencestorage:identifier")
+                    val byte = ByteArrayOutputStream().apply {
+                        DataOutputStream(this).run {
+                            writeUTF(residenceName)
+                            flush()
+                        }
+                    }.toByteArray()
+                    output.writeShort(byte.size)
+                    output.write(byte)
                 }
                 player.sendPluginMessage(
                     ResidenceStorageSpigotMain.instance,

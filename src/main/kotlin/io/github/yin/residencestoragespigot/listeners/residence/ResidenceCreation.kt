@@ -2,7 +2,6 @@ package io.github.yin.residencestoragespigot.listeners.residence
 
 import com.bekvon.bukkit.residence.Residence
 import com.bekvon.bukkit.residence.event.ResidenceCreationEvent
-import io.github.yin.proxyinfospigot.ProxyInfoSpigotMain
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
 import io.github.yin.residencestoragespigot.storages.ConfigurationYAMLStorage
 import io.github.yin.residencestoragespigot.storages.MessageYAMLStorage
@@ -57,7 +56,7 @@ object ResidenceCreation : Listener {
                         owner,
                         permissions.flags,
                         permissions.playerFlags,
-                        ProxyInfoSpigotMain.serverName
+                        ResidenceStorageSpigotMain.serverName
                     )
                 ResidenceMySQLStorage.addResidence(residenceInfo)
             }

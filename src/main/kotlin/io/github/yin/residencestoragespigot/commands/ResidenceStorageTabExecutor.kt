@@ -1,11 +1,11 @@
 package io.github.yin.residencestoragespigot.commands
 
 import com.bekvon.bukkit.residence.Residence
-import io.github.yin.proxyinfospigot.ProxyInfoSpigotMain
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
 import io.github.yin.residencestoragespigot.storages.ConfigurationYAMLStorage
 import io.github.yin.residencestoragespigot.storages.MessageYAMLStorage
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
+import io.github.yin.residencestoragespigot.supports.Cooldown
 import io.github.yin.residencestoragespigot.supports.ResidenceInfo
 import io.github.yin.residencestoragespigot.supports.ResidencePage
 import io.github.yin.residencestoragespigot.supports.TextProcess
@@ -17,6 +17,7 @@ import org.bukkit.command.TabExecutor
 import org.bukkit.entity.Player
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
+import java.time.Duration
 
 object ResidenceStorageTabExecutor : TabExecutor {
 
@@ -135,7 +136,11 @@ object ResidenceStorageTabExecutor : TabExecutor {
                     }
 
                     arguments[0].equals("teleport", ignoreCase = true) -> {
-                        return null
+                        if (Cooldown.globalUse(Duration.ofSeconds(5))) {
+                            val player = Bukkit.getOnlinePlayers().firstOrNull() ?: return null
+                            ResidenceStorageSpigotMain.instance.sendBytePlayerNames(player)
+                        }
+                        return listMatches(arguments[1], ResidenceStorageSpigotMain.playerNames)
                     }
                 }
             }
@@ -207,7 +212,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
                     value.residenceName,
                     value.permissions.flags,
                     value.permissions.playerFlags,
-                    ProxyInfoSpigotMain.serverName
+                    ResidenceStorageSpigotMain.serverName
                 )
             )
         }
@@ -381,7 +386,13 @@ object ResidenceStorageTabExecutor : TabExecutor {
     // 该方法是无视权限直接传送
     // 涉及复杂的权限判断的去看 ResidenceCommand 的 teleport()
     private fun processTeleport(sender: CommandSender, playerName: String, residenceName: String) {
-        if (playerName !in ProxyInfoSpigotMain.players) {
+
+        val player = Bukkit.getOnlinePlayers().firstOrNull() ?: run {
+            sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.teleport-no-online-player"))
+            return
+        }
+
+        if (playerName !in ResidenceStorageSpigotMain.playerNames) {
             sender.sendMessage(
                 TextProcess.replace(
                     MessageYAMLStorage.fileConfiguration.getString("command.player-does-not-exist")!!,
@@ -402,18 +413,42 @@ object ResidenceStorageTabExecutor : TabExecutor {
             return
         }
 
+        val serverName = residenceInfo.serverName
+
         val byteArrayOutputStream = ByteArrayOutputStream()
-        DataOutputStream(byteArrayOutputStream).use { out ->
-            out.writeUTF("teleport")
-            out.writeUTF(playerName)
-            out.writeUTF(residenceName)
-            out.writeUTF(residenceInfo.serverName)
+        // 跨服传送
+        DataOutputStream(byteArrayOutputStream).use { output ->
+            output.writeUTF("ConnectOther")
+            output.writeUTF(playerName)
+            output.writeUTF(serverName)
         }
-        Bukkit.getOnlinePlayers().first().sendPluginMessage(
+        player.sendPluginMessage(
             ResidenceStorageSpigotMain.instance,
             ResidenceStorageSpigotMain.pluginChannel,
             byteArrayOutputStream.toByteArray()
         )
+
+        byteArrayOutputStream.reset()
+        // 消息
+        DataOutputStream(byteArrayOutputStream).use { output ->
+            output.writeUTF("Forward")
+            output.writeUTF(serverName)
+            output.writeUTF("residencestorage:identifier")
+            val byte = ByteArrayOutputStream().apply {
+                DataOutputStream(this).run {
+                    writeUTF(residenceName)
+                    flush()
+                }
+            }.toByteArray()
+            output.writeShort(byte.size)
+            output.write(byte)
+        }
+        player.sendPluginMessage(
+            ResidenceStorageSpigotMain.instance,
+            ResidenceStorageSpigotMain.pluginChannel,
+            byteArrayOutputStream.toByteArray()
+        )
+
         sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.teleport"))
     }
 
