@@ -17,3 +17,13 @@ commands:
 permissions:
   residencestoragespigot.command:
     default: 'op'
+  residencestoragespigot.command.help:
+    default: 'op'
+  residencestoragespigot.command.list:
+    default: 'op'
+  residencestoragespigot.command.list.all:
+    default: 'op'
+  residencestoragespigot.command.teleport:
+    default: 'op'
+  residencestoragespigot.command.reload:
+    default: 'op'
