@@ -24,8 +24,8 @@ object ReceivePluginMessage : PluginMessageListener {
             when (action) {
                 // 标识符 bytes.size bytes
                 "residencestorage:identifier" -> {
-                    val len = input.readShort()
-                    val bytes = ByteArray(len.toInt())
+                    val length = input.readShort()
+                    val bytes = ByteArray(length.toInt())
                     input.readFully(bytes)
                     DataInputStream(ByteArrayInputStream(bytes)).use { stream ->
                         val residenceName = stream.readUTF()
