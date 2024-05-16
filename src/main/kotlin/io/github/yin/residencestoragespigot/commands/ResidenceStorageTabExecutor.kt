@@ -402,7 +402,6 @@ object ResidenceStorageTabExecutor : TabExecutor {
             return
         }
 
-        // 跨服
         val residenceInfo = ResidenceMySQLStorage.getResidence(residenceName) ?: run {
             sender.sendMessage(
                 TextProcess.replace(
