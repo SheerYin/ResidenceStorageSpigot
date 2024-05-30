@@ -41,7 +41,7 @@ object ResidenceCommand : Listener {
                             teleport(player, arguments[1], event)
                         }
                         arguments[0].lowercase() == "create" -> {
-                            if (ResidenceMySQLStorage.getResidenceNames().contains(arguments[2])) {
+                            if (ResidenceMySQLStorage.getResidenceNames().contains(arguments[1])) {
                                 player.sendMessage(MessageYAMLStorage.configuration.getString("command.create-name-already-exists"))
                                 event.isCancelled = true
                                 return
