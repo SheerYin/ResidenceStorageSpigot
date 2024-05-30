@@ -12,6 +12,7 @@ import java.io.DataInputStream
 import java.util.*
 
 object ReceivePluginMessage : PluginMessageListener {
+
     @EventHandler(priority = EventPriority.NORMAL)
     override fun onPluginMessageReceived(channel: String, player: Player, message: ByteArray) {
         if (channel != ResidenceStorageSpigotMain.pluginChannel) {

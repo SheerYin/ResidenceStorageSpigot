@@ -18,24 +18,24 @@ import org.bukkit.entity.Player
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.time.Duration
+import java.util.*
+import kotlin.collections.ArrayList
 
 object ResidenceStorageTabExecutor : TabExecutor {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, arguments: Array<out String>): Boolean {
         when (arguments.size) {
             0 -> {
-                if (suggestion("help", "help", sender)) {
+                if(permissionMessage(sender, "$pluginName.command.help")) {
                     processHelp(sender)
                 }
             }
-
             1 -> {
                 when {
-                    suggestion(arguments[0], "help", sender) -> {
+                    suggestion(sender, arguments[0], "help") -> {
                         processHelp(sender)
                     }
-
-                    suggestion(arguments[0], "list", sender) -> {
+                    suggestion(sender,arguments[0], "list") -> {
                         (sender as? Player)?.let { player ->
                             Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
                                 processList(player, player.displayName, "1")
@@ -43,14 +43,12 @@ object ResidenceStorageTabExecutor : TabExecutor {
                         }
                             ?: sender.sendMessage(MessageYAMLStorage.configuration.getString("command.only-player-execute"))
                     }
-
-                    suggestion(arguments[0], "listall", sender) -> {
+                    suggestion(sender, arguments[0], "listall") -> {
                         Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
                             processAllList(sender, "1")
                         })
                     }
-
-                    suggestion(arguments[0], "import", sender) -> {
+                    suggestion(sender, arguments[0], "import") -> {
                         (sender as? Player)?.let { player ->
                             Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
                                 processImport(player)
@@ -58,8 +56,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
                         }
                             ?: sender.sendMessage(MessageYAMLStorage.configuration.getString("command.only-player-execute"))
                     }
-
-                    suggestion(arguments[0], "reload", sender) -> {
+                    suggestion(sender, arguments[0], "reload") -> {
                         Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
                             ConfigurationYAMLStorage.initialize(ResidenceStorageSpigotMain.instance.dataFolder)
                             ConfigurationYAMLStorage.load()
@@ -72,16 +69,14 @@ object ResidenceStorageTabExecutor : TabExecutor {
                     }
                 }
             }
-
             2 -> {
                 when {
-                    suggestion(arguments[0], "list", sender) -> {
+                    suggestion(sender, arguments[0], "list") -> {
                         Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
                             processList(sender, arguments[1], "1")
                         })
                     }
-
-                    suggestion(arguments[0], "listall", sender) -> {
+                    suggestion(sender, arguments[0], "listall") -> {
                         Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
                             processAllList(sender, arguments[1])
                         })
@@ -91,22 +86,18 @@ object ResidenceStorageTabExecutor : TabExecutor {
 
             3 -> {
                 when {
-                    suggestion(arguments[0], "list", sender) -> {
+                    suggestion(sender, arguments[0], "list") -> {
                         Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
                             processList(sender, arguments[1], arguments[2])
                         })
-
                     }
-
-                    suggestion(arguments[0], "teleport", sender) -> {
+                    suggestion(sender, arguments[0], "teleport") -> {
                         Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
                             processTeleport(sender, arguments[1], arguments[2])
                         })
                     }
                 }
-
             }
-
         }
         return true
     }
@@ -116,17 +107,14 @@ object ResidenceStorageTabExecutor : TabExecutor {
             1 -> {
                 return listMatches(arguments[0], listOf("help", "list", "listall", "teleport", "import", "reload"))
             }
-
             2 -> {
                 when {
                     arguments[0].equals("list", ignoreCase = true) -> {
                         return null
                     }
-
                     arguments[0].equals("listall", ignoreCase = true) -> {
                         return listOf("<page>")
                     }
-
                     arguments[0].equals("teleport", ignoreCase = true) -> {
                         if (Cooldown.globalUse(Duration.ofSeconds(5))) {
                             val player = Bukkit.getOnlinePlayers().firstOrNull() ?: return null
@@ -136,13 +124,11 @@ object ResidenceStorageTabExecutor : TabExecutor {
                     }
                 }
             }
-
             3 -> {
                 when {
                     arguments[0].equals("list", ignoreCase = true) -> {
                         return listOf("<page>")
                     }
-
                     arguments[0].equals("teleport", ignoreCase = true) -> {
                         return listMatches(arguments[2], ResidenceMySQLStorage.getResidenceNames())
                     }
@@ -166,12 +152,11 @@ object ResidenceStorageTabExecutor : TabExecutor {
         return false
     }
 
-    private fun suggestion(argument: String, suggest: String, sender: CommandSender): Boolean {
-        if (argument.equals(suggest, ignoreCase = true)) {
-            return permissionMessage(
-                sender,
-                "${ResidenceStorageSpigotMain.instance.description.name.lowercase()}.command.$suggest"
-            )
+    private val pluginName = ResidenceStorageSpigotMain.instance.description.name.lowercase()
+    private fun suggestion(sender: CommandSender, argument: String, vararg suggest: String): Boolean {
+        val lowerCaseArgument = argument.lowercase(Locale.getDefault())
+        if (lowerCaseArgument in suggest) {
+            return permissionMessage(sender, "$pluginName.command.$lowerCaseArgument")
         }
         return false
     }

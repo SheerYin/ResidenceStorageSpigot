@@ -1,23 +1,11 @@
-messages:
+message:
   language: 'chinese'
   file:
-    # 例子 'plugins/Test/翻译'
-    # 最终路径 'plugins/Test/翻译/chinese.yml'
-    # 迁移路径后数据不会自动迁移，需要手动迁移
     path: ''
 
-residences:
-  mysql:
-    url: 'jdbc:mysql://localhost:3306/database'      # 数据库的 JDBC URL
-    username: 'root'                                 # 数据库用户名
-    password: 'password'                             # 数据库密码
-    maximum-pool-size: 10                            # 连接池的最大大小，默认建议值 10
-    minimum-idle: 10                                 # 连接池中的最小空闲连接数，默认建议与最大连接数相同
-    connection-timeout: 30000                        # 获取新连接时的最大等待时间（毫秒），默认建议值 30000
-    idle-timeout: 600000                             # 连接空闲的最长时间（毫秒），默认建议值 600000
-    maximum-lifetime: 1800000                        # 连接在连接池中存活的最长时间（毫秒），默认建议值 1800000
-    table-prefix: 'residence_'                       # 表前缀，常见的分隔符是 "_"
-
+residence:
+  file:
+    path: ''
   # 需要同时修改 Residence 的领地数量
   amount:
     # 权限是 residencestoragespigot.amount.player 允许玩家最多拥有 5 个领地

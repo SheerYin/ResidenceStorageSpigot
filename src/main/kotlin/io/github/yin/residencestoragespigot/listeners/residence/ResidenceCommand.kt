@@ -42,7 +42,7 @@ object ResidenceCommand : Listener {
             }
 
             2 -> {
-                if (arguments[0].lowercase() == "teleport" || arguments[0].lowercase() == "tp") {
+                if (arguments[0].lowercase() == "tp") {
                     teleport(player, arguments[1], event)
                 }
             }
@@ -104,11 +104,9 @@ object ResidenceCommand : Listener {
         }
 
         val residenceInfo = ResidenceMySQLStorage.getResidence(residenceName) ?: return
+
         val ownerUUID = uuid.toString()
-        if (residenceInfo.ownerUUID == ownerUUID || residenceInfo.residenceFlags["tp"] == true || residenceInfo.playerFlags[ownerUUID]?.get(
-                "tp"
-            ) == true
-        ) {
+        if (residenceInfo.ownerUUID == ownerUUID || residenceInfo.residenceFlags["tp"] == true || residenceInfo.playerFlags[ownerUUID]?.get("tp") == true) {
             event.isCancelled = true
             Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
                 val serverName = residenceInfo.serverName

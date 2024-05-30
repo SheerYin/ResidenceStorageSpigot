@@ -16,5 +16,5 @@ mysql:
   # 连接在连接池中存活的最长时间（毫秒），默认建议值 1800000
   maximum-lifetime: 1800000
   # 表前缀，常见的分隔符是 "_"
-  table-prefix: 'res_'
+  table-prefix: 'residence_'
 
