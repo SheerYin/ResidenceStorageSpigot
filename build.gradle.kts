@@ -1,8 +1,10 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.text.SimpleDateFormat
 import java.util.*
 
 plugins {
     kotlin("jvm") version "2.0.0"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 var pluginVersion = SimpleDateFormat("yyyy.MM.dd").format(Date()) + "-SNAPSHOT"
@@ -24,6 +26,14 @@ dependencies {
 
     // implementation(files("libraries/ProxyInfoSpigot.jar"))
     compileOnly(files("libraries/Residence.jar"))
+}
+
+tasks.shadowJar {
+    archiveVersion.set("")
+    archiveClassifier.set("shadow-j8")
+//    relocate("kotlin", "relocated.kotlin")
+//    relocate("org.jetbrains", "relocated.jetbrains")
+//    relocate("org.intellij", "relocated.intellij")
 }
 
 tasks.register("writePluginVersion") {
@@ -50,6 +60,19 @@ tasks.named("build") {
     finalizedBy("restorePluginVersion")
 }
 
+tasks.named("shadowJar") {
+    finalizedBy("restorePluginVersion")
+}
+
 kotlin {
+    // jvmToolchain(8)
     jvmToolchain(17)
+}
+
+tasks.withType<JavaCompile> {
+//    sourceCompatibility = "1.8"
+//    targetCompatibility = "1.8"
+
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
 }
