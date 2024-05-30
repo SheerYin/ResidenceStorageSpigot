@@ -36,15 +36,17 @@ object ResidenceCommand : Listener {
                     }
                 }
                 2 -> {
-                    if (arguments[0].lowercase() == "tp") {
-                        teleport(player, arguments[1], event)
-                    }
-                }
-                3 -> {
-                    if (ResidenceMySQLStorage.getResidenceNames().contains(arguments[2])) {
-                        player.sendMessage(MessageYAMLStorage.configuration.getString("command.create-name-already-exists"))
-                        event.isCancelled = true
-                        return
+                    when {
+                        arguments[0].lowercase() == "tp" -> {
+                            teleport(player, arguments[1], event)
+                        }
+                        arguments[0].lowercase() == "create" -> {
+                            if (ResidenceMySQLStorage.getResidenceNames().contains(arguments[2])) {
+                                player.sendMessage(MessageYAMLStorage.configuration.getString("command.create-name-already-exists"))
+                                event.isCancelled = true
+                                return
+                            }
+                        }
                     }
                 }
             }
