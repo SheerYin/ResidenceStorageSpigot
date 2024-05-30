@@ -356,14 +356,12 @@ object ResidenceMySQLStorage {
     }
 
     fun setPlayerFlags(residenceName: String, playerUUID: UUID, key: String, value: Boolean): Boolean {
-        Bukkit.broadcastMessage("调用 set")
         val sql = "UPDATE $table SET player_flags = JSON_SET(player_flags, ?, ?) WHERE residence_name = ?"
         getConnection().use { connection: Connection ->
             connection.prepareStatement(sql).use { preparedStatement ->
                 preparedStatement.setString(1,"$.\"$playerUUID\".\"$key\"")
                 preparedStatement.setString(2, value.toString())
                 preparedStatement.setString(3, residenceName)
-                Bukkit.broadcastMessage("结果 " + preparedStatement.executeUpdate())
                 return preparedStatement.executeUpdate() > 0
 
             }
@@ -372,13 +370,11 @@ object ResidenceMySQLStorage {
 
 
     fun removePlayerFlags(residenceName: String, playerUUID: UUID, key: String): Boolean {
-        Bukkit.broadcastMessage("调用 remove")
         val sql = "UPDATE $table SET player_flags = JSON_REMOVE(player_flags, ?) WHERE residence_name = ?"
         getConnection().use { connection: Connection ->
             connection.prepareStatement(sql).use { preparedStatement ->
                 preparedStatement.setString(1,"$.\"$playerUUID\".\"$key\"")
                 preparedStatement.setString(2, residenceName)
-                Bukkit.broadcastMessage("结果 " + preparedStatement.executeUpdate())
                 return preparedStatement.executeUpdate() > 0
             }
         }
