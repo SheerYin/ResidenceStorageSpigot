@@ -8,7 +8,8 @@ import io.github.yin.residencestoragespigot.storages.MessageYAMLStorage
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
 import io.github.yin.residencestoragespigot.supports.ResidenceInfo
 import io.github.yin.residencestoragespigot.supports.TextProcess
-import org.bukkit.Bukkit
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -45,8 +46,8 @@ object ResidenceCreation : Listener {
         val residence = event.residence
         val permissions = residence.permissions
 
-        Bukkit.getScheduler().runTaskLaterAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
-
+        ResidenceStorageSpigotMain.scope.launch {
+            delay(500)
             // 延迟后才知道领地到底创建成功没有
             if (Residence.getInstance().residenceManager.residences.containsKey(residenceName.lowercase(Locale.getDefault()))) {
                 val residenceInfo =
@@ -60,7 +61,7 @@ object ResidenceCreation : Listener {
                     )
                 ResidenceMySQLStorage.addResidence(residenceInfo)
             }
-        }, 5L)
+        }
 
     }
 

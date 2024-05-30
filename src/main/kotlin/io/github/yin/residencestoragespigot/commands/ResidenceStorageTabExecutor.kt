@@ -9,6 +9,7 @@ import io.github.yin.residencestoragespigot.supports.Cooldown
 import io.github.yin.residencestoragespigot.supports.ResidenceInfo
 import io.github.yin.residencestoragespigot.supports.ResidencePage
 import io.github.yin.residencestoragespigot.supports.TextProcess
+import kotlinx.coroutines.launch
 import net.md_5.bungee.chat.ComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
@@ -37,27 +38,25 @@ object ResidenceStorageTabExecutor : TabExecutor {
                     }
                     suggestion(sender,arguments[0], "list") -> {
                         (sender as? Player)?.let { player ->
-                            Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                            ResidenceStorageSpigotMain.scope.launch {
                                 processList(player, player.displayName, "1")
-                            })
-                        }
-                            ?: sender.sendMessage(MessageYAMLStorage.configuration.getString("command.only-player-execute"))
+                            }
+                        } ?: sender.sendMessage(MessageYAMLStorage.configuration.getString("command.only-player-execute"))
                     }
                     suggestion(sender, arguments[0], "listall") -> {
-                        Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                        ResidenceStorageSpigotMain.scope.launch {
                             processAllList(sender, "1")
-                        })
+                        }
                     }
                     suggestion(sender, arguments[0], "import") -> {
                         (sender as? Player)?.let { player ->
-                            Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                            ResidenceStorageSpigotMain.scope.launch {
                                 processImport(player)
-                            })
-                        }
-                            ?: sender.sendMessage(MessageYAMLStorage.configuration.getString("command.only-player-execute"))
+                            }
+                        } ?: sender.sendMessage(MessageYAMLStorage.configuration.getString("command.only-player-execute"))
                     }
                     suggestion(sender, arguments[0], "reload") -> {
-                        Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+                        ResidenceStorageSpigotMain.scope.launch {
                             ConfigurationYAMLStorage.initialize(ResidenceStorageSpigotMain.instance.dataFolder)
                             ConfigurationYAMLStorage.load()
                             MessageYAMLStorage.initialize(ResidenceStorageSpigotMain.instance.dataFolder)
@@ -65,7 +64,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
                             ResidenceMySQLStorage.initialize(ResidenceStorageSpigotMain.instance.dataFolder)
                             ResidenceMySQLStorage.load()
                             sender.sendMessage(MessageYAMLStorage.configuration.getString("command.reload"))
-                        })
+                        }
                     }
                 }
             }

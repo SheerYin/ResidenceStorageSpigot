@@ -3,7 +3,7 @@ package io.github.yin.residencestoragespigot.listeners.residence
 import com.bekvon.bukkit.residence.event.ResidenceOwnerChangeEvent
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
-import org.bukkit.Bukkit
+import kotlinx.coroutines.launch
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
@@ -17,9 +17,9 @@ object ResidenceOwnerChange : Listener {
         val ownerUUID = event.newOwnerUuid
         val owner = event.newOwner
 
-        Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+        ResidenceStorageSpigotMain.scope.launch {
             ResidenceMySQLStorage.updateResidenceOwner(residenceName, ownerUUID, owner)
-        })
+        }
     }
 
 }

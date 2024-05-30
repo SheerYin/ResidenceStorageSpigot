@@ -7,11 +7,13 @@ import io.github.yin.residencestoragespigot.listeners.residence.*
 import io.github.yin.residencestoragespigot.storages.ConfigurationYAMLStorage
 import io.github.yin.residencestoragespigot.storages.MessageYAMLStorage
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
+import kotlinx.coroutines.*
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
+import java.util.concurrent.TimeUnit
 
 class ResidenceStorageSpigotMain : JavaPlugin() {
 
@@ -20,13 +22,16 @@ class ResidenceStorageSpigotMain : JavaPlugin() {
         const val prefix = "§f[§7领地储存§f] "
         const val pluginChannel = "BungeeCord"
 
+        lateinit var scope: CoroutineScope
+
         var serverName = ""
         var playerNames = mutableListOf<String>()
     }
 
     override fun onEnable() {
         instance = this
-        server.consoleSender.sendMessage(prefix + "插件开始加载 " + description.version)
+
+        scope = CoroutineScope(Dispatchers.IO)
 
         ConfigurationYAMLStorage.initialize(dataFolder)
         ConfigurationYAMLStorage.load()
@@ -48,9 +53,24 @@ class ResidenceStorageSpigotMain : JavaPlugin() {
         Bukkit.getPluginManager().registerEvents(ResidenceRename, this)
 
         getCommand("residencestoragespigot")?.setExecutor(ResidenceStorageTabExecutor)
+
+        server.consoleSender.sendMessage(prefix + "插件开始加载 " + description.version)
     }
 
     override fun onDisable() {
+        runBlocking {
+            try {
+                withTimeout(TimeUnit.MINUTES.toMillis(1)) {
+                    server.consoleSender.sendMessage(prefix + "正在等待任务完成，最多等待 1 分钟")
+                    scope.coroutineContext[Job]?.children?.forEach { it.join() }
+                    server.consoleSender.sendMessage(prefix + "任务全部完成")
+                }
+            } catch (exception: TimeoutCancellationException) {
+                server.consoleSender.sendMessage(prefix + "已超时，强制清理所有任务")
+                scope.cancel()
+            }
+        }
+
         ResidenceMySQLStorage.close()
         server.consoleSender.sendMessage(prefix + "插件开始卸载 " + description.version)
     }

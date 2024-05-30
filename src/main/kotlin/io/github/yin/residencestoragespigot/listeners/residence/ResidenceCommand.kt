@@ -7,8 +7,8 @@ import io.github.yin.residencestoragespigot.storages.MessageYAMLStorage
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
 import io.github.yin.residencestoragespigot.supports.ResidencePage
 import io.github.yin.residencestoragespigot.supports.TextProcess
+import kotlinx.coroutines.launch
 import net.md_5.bungee.chat.ComponentSerializer
-import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -108,7 +108,7 @@ object ResidenceCommand : Listener {
         val ownerUUID = uuid.toString()
         if (residenceInfo.ownerUUID == ownerUUID || residenceInfo.residenceFlags["tp"] == true || residenceInfo.playerFlags[ownerUUID]?.get("tp") == true) {
             event.isCancelled = true
-            Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+            ResidenceStorageSpigotMain.scope.launch {
                 val serverName = residenceInfo.serverName
 
                 val byteArrayOutputStream = ByteArrayOutputStream()
@@ -143,7 +143,7 @@ object ResidenceCommand : Listener {
                     ResidenceStorageSpigotMain.pluginChannel,
                     byteArrayOutputStream.toByteArray()
                 )
-            })
+            }
         }
     }
 

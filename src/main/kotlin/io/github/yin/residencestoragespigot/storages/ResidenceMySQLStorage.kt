@@ -6,7 +6,6 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
 import io.github.yin.residencestoragespigot.supports.ResidenceInfo
-import org.bukkit.Bukkit
 import org.bukkit.configuration.file.YamlConfiguration
 import java.io.File
 import java.nio.file.Files

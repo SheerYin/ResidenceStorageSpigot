@@ -5,7 +5,7 @@ import com.bekvon.bukkit.residence.event.ResidenceFlagEvent.FlagType
 import com.bekvon.bukkit.residence.protection.FlagPermissions.FlagState
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
-import org.bukkit.Bukkit
+import kotlinx.coroutines.launch
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
@@ -18,7 +18,8 @@ object ResidenceFlagChange : Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     fun onResidenceFlagChange(event: ResidenceFlagChangeEvent) {
         val residenceName = event.residence.residenceName ?: return
-        Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
+
+        ResidenceStorageSpigotMain.scope.launch {
             when (event.flagType) {
                 FlagType.RESIDENCE -> {
                     val state = when (event.newState) {
@@ -45,7 +46,7 @@ object ResidenceFlagChange : Listener {
 
                 else -> {}
             }
-        })
+        }
     }
 
 
