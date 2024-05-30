@@ -178,7 +178,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
         for (residence in residenceManager.residences) {
             val value = residence.value
             localNames.add(value.residenceName)
-            residenceInfos.add(ResidenceInfo(value.residenceName, value.ownerUUID.toString(), value.residenceName, value.permissions.flags, value.permissions.playerFlags, ResidenceStorageSpigotMain.serverName))
+            residenceInfos.add(ResidenceInfo(value.residenceName, value.ownerUUID, value.owner, value.permissions.flags, value.permissions.playerFlags, ResidenceStorageSpigotMain.serverName))
         }
 
         val duplicates = mutableListOf<String>()

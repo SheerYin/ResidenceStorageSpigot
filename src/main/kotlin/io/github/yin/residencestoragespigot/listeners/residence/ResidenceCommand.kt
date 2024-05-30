@@ -22,28 +22,30 @@ object ResidenceCommand : Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     fun onResidenceCommand(event: ResidenceCommandEvent) {
         val player = event.sender as? Player ?: return
+
         val command = event.command.lowercase(Locale.getDefault())
-        if (command != "residence" && command != "res") {
-            return
-        }
-
         val arguments = event.args
-        if (arguments.isEmpty()) {
-            return
-        }
 
-
-        when (arguments.size) {
-            1 -> {
-                val argument = arguments[0].lowercase(Locale.getDefault())
-                if (argument == "list") {
-                    listOne(player, event)
+        val list = listOf("residence", "res")
+        if (command in list) {
+            when (arguments.size) {
+                1 -> {
+                    val argument = arguments[0].lowercase(Locale.getDefault())
+                    if (argument == "list") {
+                        listOne(player, event)
+                    }
                 }
-            }
-
-            2 -> {
-                if (arguments[0].lowercase() == "tp") {
-                    teleport(player, arguments[1], event)
+                2 -> {
+                    if (arguments[0].lowercase() == "tp") {
+                        teleport(player, arguments[1], event)
+                    }
+                }
+                3 -> {
+                    if (ResidenceMySQLStorage.getResidenceNames().contains(arguments[2])) {
+                        player.sendMessage(MessageYAMLStorage.configuration.getString("command.create-name-already-exists"))
+                        event.isCancelled = true
+                        return
+                    }
                 }
             }
         }
@@ -98,15 +100,15 @@ object ResidenceCommand : Listener {
 
 
     private fun teleport(player: Player, residenceName: String, event: ResidenceCommandEvent) {
-        val uuid = player.uniqueId
-        if (Residence.getInstance().playerManager.getResidenceList(uuid).contains(residenceName)) {
+
+        if (Residence.getInstance().residenceManager.residences.contains(residenceName.lowercase(Locale.getDefault()))) {
             return
         }
 
         val residenceInfo = ResidenceMySQLStorage.getResidence(residenceName) ?: return
 
-        val ownerUUID = uuid.toString()
-        if (residenceInfo.ownerUUID == ownerUUID || residenceInfo.residenceFlags["tp"] == true || residenceInfo.playerFlags[ownerUUID]?.get("tp") == true) {
+        val ownerUUID = player.uniqueId
+        if (residenceInfo.ownerUUID == ownerUUID || residenceInfo.residenceFlags["tp"] == true || residenceInfo.playerFlags[ownerUUID.toString()]?.get("tp") == true) {
             event.isCancelled = true
             ResidenceStorageSpigotMain.scope.launch {
                 val serverName = residenceInfo.serverName
@@ -131,6 +133,7 @@ object ResidenceCommand : Listener {
                     output.writeUTF("residencestorage:identifier")
                     val byte = ByteArrayOutputStream().apply {
                         DataOutputStream(this).run {
+                            writeUTF(player.name)
                             writeUTF(residenceName)
                             flush()
                         }

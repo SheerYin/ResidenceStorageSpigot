@@ -86,7 +86,7 @@ object ResidenceMySQLStorage {
         getConnection().use { connection ->
             connection.prepareStatement(sql).use { preparedStatement ->
                 preparedStatement.setString(1, residenceInfo.residenceName)
-                preparedStatement.setString(2, residenceInfo.ownerUUID)
+                preparedStatement.setString(2, residenceInfo.ownerUUID.toString())
                 preparedStatement.setString(3, residenceInfo.owner)
                 preparedStatement.setString(4, gson.toJson(residenceInfo.residenceFlags))
                 preparedStatement.setString(5, gson.toJson(residenceInfo.playerFlags))
@@ -103,7 +103,7 @@ object ResidenceMySQLStorage {
             connection.prepareStatement(sql).use { preparedStatement ->
                 for (residenceInfo in residenceInfos) {
                     preparedStatement.setString(1, residenceInfo.residenceName)
-                    preparedStatement.setString(2, residenceInfo.ownerUUID)
+                    preparedStatement.setString(2, residenceInfo.ownerUUID.toString())
                     preparedStatement.setString(3, residenceInfo.owner)
                     preparedStatement.setString(4, gson.toJson(residenceInfo.residenceFlags))
                     preparedStatement.setString(5, gson.toJson(residenceInfo.playerFlags))
@@ -137,7 +137,7 @@ object ResidenceMySQLStorage {
                 if (resultSet.next()) {
                     return ResidenceInfo(
                         residenceName,
-                        resultSet.getString("owner_uuid"),
+                        UUID.fromString(resultSet.getString("owner_uuid")),
                         resultSet.getString("owner"),
                         gson.fromJson(
                             resultSet.getString("residence_flags"),
@@ -166,7 +166,7 @@ object ResidenceMySQLStorage {
                     while (resultSet.next()) {
                         val residenceInfo = ResidenceInfo(
                             resultSet.getString("residence_name"),
-                            resultSet.getString("owner_uuid"),
+                            UUID.fromString(resultSet.getString("owner_uuid")),
                             resultSet.getString("owner"),
                             gson.fromJson(
                                 resultSet.getString("residence_flags"),
@@ -254,7 +254,7 @@ object ResidenceMySQLStorage {
                     while (resultSet.next()) {
                         val residenceInfo = ResidenceInfo(
                             resultSet.getString("residence_name"),
-                            resultSet.getString("owner_uuid"),
+                            UUID.fromString(resultSet.getString("owner_uuid")),
                             resultSet.getString("owner"),
                             gson.fromJson(
                                 resultSet.getString("residence_flags"),
@@ -286,7 +286,7 @@ object ResidenceMySQLStorage {
                     while (resultSet.next()) {
                         val residenceInfo = ResidenceInfo(
                             resultSet.getString("residence_name"),
-                            resultSet.getString("owner_uuid"),
+                            UUID.fromString(resultSet.getString("owner_uuid")),
                             resultSet.getString("owner"),
                             gson.fromJson(
                                 resultSet.getString("residence_flags"),

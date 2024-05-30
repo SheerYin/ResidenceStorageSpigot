@@ -24,12 +24,18 @@ object ResidenceCreation : Listener {
     fun onResidenceCreation(event: ResidenceCreationEvent) {
 
         val player = event.player
-        val names = ResidenceMySQLStorage.getOwnerResidenceNames(player.uniqueId)
         val residenceName = event.residenceName
+
+        if (ResidenceMySQLStorage.getResidenceNames().contains(residenceName)) {
+            player.sendMessage(MessageYAMLStorage.configuration.getString("command.create-name-already-exists"))
+            event.isCancelled = true
+            return
+        }
+
+        val names = ResidenceMySQLStorage.getOwnerResidenceNames(player.uniqueId)
         // 玩家领地总数有没有大于 config 的 residences.amount 权限
-        // 有没有重名
         val number = numberPermissions(player)
-        if (names.size >= number || names.contains(residenceName)) {
+        if (names.size >= number) {
             player.sendMessage(
                 TextProcess.replace(
                     MessageYAMLStorage.configuration.getString("command.create-amount-limit")!!,
@@ -41,7 +47,8 @@ object ResidenceCreation : Listener {
             return
         }
 
-        val ownerUUID = player.uniqueId.toString()
+
+        val ownerUUID = player.uniqueId
         val owner = player.displayName
         val residence = event.residence
         val permissions = residence.permissions

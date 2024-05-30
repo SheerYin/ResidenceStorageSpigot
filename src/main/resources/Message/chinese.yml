@@ -7,6 +7,7 @@ command:
     - §f[§7领地储存§f] 导入数据 /rs import
     - §f[§7领地储存§f] 重新加载 /rs reload
 
+  create-name-already-exists: '§f[§7领地储存§f] 重复的领地名'
   create-amount-limit: '§f[§7领地储存§f] 数量已达到 {0} / {1} 限制'
 
   page-invalid: '§f[§7领地储存§f] 页不是整数'

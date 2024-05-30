@@ -2,6 +2,7 @@ package io.github.yin.residencestoragespigot.listeners
 
 import com.bekvon.bukkit.residence.Residence
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
+import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -29,11 +30,10 @@ object ReceivePluginMessage : PluginMessageListener {
                     val bytes = ByteArray(length.toInt())
                     input.readFully(bytes)
                     DataInputStream(ByteArrayInputStream(bytes)).use { stream ->
+                        val target = Bukkit.getPlayer(stream.readUTF()) ?: return
                         val residenceName = stream.readUTF()
-                        val claimedResidence =
-                            Residence.getInstance().residenceManager.residences[residenceName.lowercase(Locale.getDefault())]
-                                ?: return
-                        player.teleport(claimedResidence.getTeleportLocation(player, true), PlayerTeleportEvent.TeleportCause.PLUGIN)
+                        val claimedResidence = Residence.getInstance().residenceManager.residences[residenceName.lowercase(Locale.getDefault())] ?: return
+                        target.teleport(claimedResidence.getTeleportLocation(target, true), PlayerTeleportEvent.TeleportCause.PLUGIN)
                     }
                 }
                 // PlayerList ALL a, b, c
