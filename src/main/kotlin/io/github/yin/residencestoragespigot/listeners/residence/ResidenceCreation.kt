@@ -23,7 +23,7 @@ object ResidenceCreation : Listener {
     fun onResidenceCreation(event: ResidenceCreationEvent) {
 
         val player = event.player
-        val names = ResidenceMySQLStorage.getOwnerUUIDResidenceNames(player.uniqueId)
+        val names = ResidenceMySQLStorage.getOwnerResidenceNames(player.uniqueId)
         val residenceName = event.residenceName
         // 玩家领地总数有没有大于 config 的 residences.amount 权限
         // 有没有重名
@@ -31,7 +31,7 @@ object ResidenceCreation : Listener {
         if (names.size >= number || names.contains(residenceName)) {
             player.sendMessage(
                 TextProcess.replace(
-                    MessageYAMLStorage.fileConfiguration.getString("command.create-amount-limit")!!,
+                    MessageYAMLStorage.configuration.getString("command.create-amount-limit")!!,
                     (names.size).toString(),
                     number.toString()
                 )
@@ -67,7 +67,7 @@ object ResidenceCreation : Listener {
 
     private fun numberPermissions(player: Player): Int {
         val section: ConfigurationSection =
-            ConfigurationYAMLStorage.fileConfiguration.getConfigurationSection("residences.amount")!!
+            ConfigurationYAMLStorage.configuration.getConfigurationSection("residences.amount")!!
         val map: Map<String, Int> = section.getKeys(false).associateBy({ it }, { section.getInt(it) })
 
         val sorted = map.entries.sortedByDescending { it.value }

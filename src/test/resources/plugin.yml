@@ -6,7 +6,7 @@ api-version: '1.16'
 author: [ 尹 ]
 prefix: '领地储存'
 libraries:
-  - org.jetbrains.kotlin:kotlin-stdlib:1.9.23
+  - org.jetbrains.kotlin:kotlin-stdlib:2.0.0
   - redis.clients:jedis:5.1.2
   - com.zaxxer:HikariCP:5.1.0
 

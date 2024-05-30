@@ -17,7 +17,7 @@ object ResidenceRename : Listener {
         val newName = event.newResidenceName
 
         Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
-            ResidenceMySQLStorage.changeName(oldName, newName)
+            ResidenceMySQLStorage.updateResidenceName(oldName, newName)
         })
 
     }

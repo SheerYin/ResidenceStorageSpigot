@@ -1,7 +1,6 @@
 package io.github.yin.residencestoragespigot.storages
 
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
-import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.configuration.file.YamlConfiguration
 import java.io.File
 import java.nio.file.Files
@@ -10,17 +9,17 @@ import java.nio.file.Path
 object ConfigurationYAMLStorage {
 
     private lateinit var path: Path
-    fun initialization(file: File) {
+    fun initialize(file: File) {
         path = file.toPath().resolve("config.yml")
         if (!Files.exists(path)) {
             ResidenceStorageSpigotMain.instance.saveResource("config.yml", true)
         }
     }
 
-    lateinit var fileConfiguration: FileConfiguration
+    lateinit var configuration: YamlConfiguration
+    lateinit var language: String
     fun load() {
-        fileConfiguration = YamlConfiguration.loadConfiguration(path.toFile())
+        configuration = YamlConfiguration.loadConfiguration(path.toFile())
+        language = configuration.getString("message.language") ?: "chinese"
     }
-
-
 }

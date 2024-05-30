@@ -2,7 +2,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 plugins {
-    kotlin("jvm") version "1.9.23"
+    kotlin("jvm") version "2.0.0"
 }
 
 var pluginVersion = SimpleDateFormat("yyyy.MM.dd").format(Date()) + "-SNAPSHOT"
@@ -17,10 +17,13 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT")
+    compileOnly("org.spigotmc:spigot-api:1.20.6-R0.1-SNAPSHOT")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     implementation("com.zaxxer:HikariCP:5.1.0")
+
     // implementation(files("libraries/ProxyInfoSpigot.jar"))
-    implementation(files("libraries/Residence.jar"))
+    compileOnly(files("libraries/Residence.jar"))
 }
 
 tasks.register("writePluginVersion") {

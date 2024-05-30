@@ -18,7 +18,7 @@ object ResidenceOwnerChange : Listener {
         val owner = event.newOwner
 
         Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
-            ResidenceMySQLStorage.changeOwner(residenceName, ownerUUID, owner)
+            ResidenceMySQLStorage.updateResidenceOwner(residenceName, ownerUUID, owner)
         })
     }
 

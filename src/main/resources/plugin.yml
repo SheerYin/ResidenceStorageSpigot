@@ -7,7 +7,8 @@ author: [ 尹 ]
 prefix: '领地储存'
 softdepend: [ Residence ]
 libraries:
-  - org.jetbrains.kotlin:kotlin-stdlib:1.9.23
+  - org.jetbrains.kotlin:kotlin-stdlib:2.0.0
+  - org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1
   - com.zaxxer:HikariCP:5.1.0
 
 commands:

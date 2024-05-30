@@ -28,24 +28,12 @@ class ResidenceStorageSpigotMain : JavaPlugin() {
         instance = this
         server.consoleSender.sendMessage(prefix + "插件开始加载 " + description.version)
 
-        ConfigurationYAMLStorage.initialization(dataFolder)
+        ConfigurationYAMLStorage.initialize(dataFolder)
         ConfigurationYAMLStorage.load()
-        val fileConfiguration = ConfigurationYAMLStorage.fileConfiguration
-        MessageYAMLStorage.initialization(dataFolder)
+        MessageYAMLStorage.initialize(dataFolder)
         MessageYAMLStorage.load()
-
-        val mysql = ResidenceMySQLStorage.Parameter(
-            fileConfiguration.getString("residences.mysql.url")!!,
-            fileConfiguration.getString("residences.mysql.username")!!,
-            fileConfiguration.getString("residences.mysql.password")!!,
-            fileConfiguration.getInt("residences.mysql.maximum-pool-size"),
-            fileConfiguration.getInt("residences.mysql.minimum-idle"),
-            fileConfiguration.getLong("residences.mysql.connection-timeout"),
-            fileConfiguration.getLong("residences.mysql.idle-timeout"),
-            fileConfiguration.getLong("residences.mysql.maximum-lifetime")
-        )
-        ResidenceMySQLStorage.initialization(mysql, fileConfiguration.getString("residences.mysql.table-prefix")!!)
-        ResidenceMySQLStorage.createTable()
+        ResidenceMySQLStorage.initialize(dataFolder)
+        ResidenceMySQLStorage.load()
 
         server.messenger.registerOutgoingPluginChannel(this, pluginChannel)
         server.messenger.registerIncomingPluginChannel(this, pluginChannel, ReceivePluginMessage)

@@ -1,0 +1,20 @@
+mysql:
+  # 数据库的 JDBC URL
+  url: 'jdbc:mysql://localhost:3306/database'
+  # 数据库用户名
+  username: 'root'
+  # 数据库密码
+  password: 'password'
+  # 连接池的最大大小，默认建议值 10
+  maximum-pool-size: 10
+  # 连接池中的最小空闲连接数，默认建议与最大连接数相同
+  minimum-idle: 10
+  # 获取新连接时的最大等待时间（毫秒），默认建议值 30000
+  connection-timeout: 30000
+  # 连接空闲的最长时间（毫秒），默认建议值 600000
+  idle-timeout: 600000
+  # 连接在连接池中存活的最长时间（毫秒），默认建议值 1800000
+  maximum-lifetime: 1800000
+  # 表前缀，常见的分隔符是 "_"
+  table-prefix: 'res_'
+

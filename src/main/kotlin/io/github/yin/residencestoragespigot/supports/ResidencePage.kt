@@ -21,11 +21,7 @@ object ResidencePage {
         return CopyOnWriteArrayList(split)
     }
 
-
-    fun allSplit(
-        map: Map<String, ResidenceInfo>,
-        pageSize: Int
-    ): CopyOnWriteArrayList<ConcurrentSkipListMap<String, ResidenceInfo>> {
+    fun allSplit(map: Map<String, ResidenceInfo>, pageSize: Int): CopyOnWriteArrayList<ConcurrentSkipListMap<String, ResidenceInfo>> {
 
         val entries = map.entries.toList()
         val list = CopyOnWriteArrayList<ConcurrentSkipListMap<String, ResidenceInfo>>()

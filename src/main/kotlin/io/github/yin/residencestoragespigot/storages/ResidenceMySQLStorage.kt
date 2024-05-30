@@ -4,42 +4,61 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
 import io.github.yin.residencestoragespigot.supports.ResidenceInfo
+import org.bukkit.configuration.file.YamlConfiguration
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.sql.Connection
 import java.util.*
 
 object ResidenceMySQLStorage {
 
-    class Parameter(
-        val url: String,
-        val username: String,
-        val password: String,
-        val maximumPoolSize: Int,
-        val minimumIdle: Int,
-        val connectionTimeout: Long,
-        val idleTimeout: Long,
-        val maxLifetime: Long
-    )
+    private lateinit var path: Path
+    fun initialize(file: File) {
+        var folder = Paths.get(ConfigurationYAMLStorage.configuration.getString("economy.file.path"))
+        if (folder.toString().isEmpty()) {
+            folder = Paths.get(file.path, "Storage")
+        } else {
+            if (folder.startsWith(Paths.get("plugins"))) {
+                folder = file.toPath().parent.resolve(folder.subpath(1, folder.nameCount))
+            }
+        }
+        Files.createDirectories(folder)
+        path = folder.resolve("mysql.yml")
+        if (!Files.exists(path)) {
+            val stream = ResidenceStorageSpigotMain.instance.getResource("Storage/mysql.yml")
+            Files.copy(stream, path, StandardCopyOption.REPLACE_EXISTING)
+        }
+    }
 
     private lateinit var dataSource: HikariDataSource
     private lateinit var tablePrefix: String
+    fun load() {
+        val configuration = YamlConfiguration.loadConfiguration(path.toFile())
 
-    fun initialization(parameter: Parameter, tablePrefix: String) {
         val config = HikariConfig()
-        config.jdbcUrl = parameter.url
-        config.username = parameter.username
-        config.password = parameter.password
-        config.maximumPoolSize = parameter.maximumPoolSize
-        config.minimumIdle = parameter.minimumIdle
-        config.connectionTimeout = parameter.connectionTimeout
-        config.idleTimeout = parameter.idleTimeout
-        config.maxLifetime = parameter.maxLifetime
+        with(configuration) {
+            config.jdbcUrl = getString("mysql.url")
+            config.username = getString("mysql.username")
+            config.password = getString("mysql.password")
+            config.maximumPoolSize = getInt("mysql.maximum-pool-size")
+            config.minimumIdle = getInt("mysql.minimum-idle")
+            config.connectionTimeout = getLong("mysql.connection-timeout")
+            config.idleTimeout = getLong("mysql.idle-timeout")
+            config.maxLifetime = getLong("mysql.maximum-lifetime")
 
-        config.transactionIsolation = "TRANSACTION_SERIALIZABLE"
+            tablePrefix = getString("mysql.table-prefix")!!
+        }
+
         dataSource = HikariDataSource(config)
 
-        this.tablePrefix = tablePrefix
+        createTable()
     }
+
 
     private fun getConnection(): Connection {
         return dataSource.connection
@@ -49,32 +68,21 @@ object ResidenceMySQLStorage {
         dataSource.close()
     }
 
+    private val table = tablePrefix + "residences"
+    private val createTableSql = "CREATE TABLE IF NOT EXISTS $table (residence_name VARCHAR(64) PRIMARY KEY, owner_uuid VARCHAR(32), owner VARCHAR(64), residence_flags JSON, player_flags JSON, server_name VARCHAR(64));"
     fun createTable() {
-        val table = tablePrefix + "residences"
-        val sql = """
-                CREATE TABLE IF NOT EXISTS $table (
-                residence_name VARCHAR(64) PRIMARY KEY,
-                owner_uuid VARCHAR(64),
-                owner VARCHAR(64),
-                residence_flags JSON,
-                player_flags JSON,
-                server_name VARCHAR(64)
-                );
-                """.trimIndent()
         getConnection().use { connection ->
             connection.createStatement().use { statement ->
-                statement.executeUpdate(sql)
+                statement.executeUpdate(createTableSql)
             }
         }
     }
 
     private val gson = Gson()
+    private val addSql = "INSERT IGNORE INTO $table (residence_name, owner_uuid, owner, residence_flags, player_flags, server_name) VALUES (?, ?, ?, ?, ?, ?)"
     fun addResidence(residenceInfo: ResidenceInfo): Boolean {
-        val table = tablePrefix + "residences"
-        val sql =
-            "INSERT INTO $table (residence_name, owner_uuid, owner, residence_flags, player_flags, server_name) VALUES (?, ?, ?, ?, ?, ?)"
         getConnection().use { connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
+            connection.prepareStatement(addSql).use { preparedStatement ->
                 preparedStatement.setString(1, residenceInfo.residenceName)
                 preparedStatement.setString(2, residenceInfo.ownerUUID)
                 preparedStatement.setString(3, residenceInfo.owner)
@@ -86,12 +94,10 @@ object ResidenceMySQLStorage {
         }
     }
 
+    private val sql2 = "INSERT INTO $table (residence_name, owner_uuid, owner, residence_flags, player_flags, server_name) VALUES (?, ?, ?, ?, ?, ?)"
     fun addResidences(residenceInfos: MutableList<ResidenceInfo>): Boolean {
-        val table = tablePrefix + "residences"
-        val sql =
-            "INSERT INTO $table (residence_name, owner_uuid, owner, residence_flags, player_flags, server_name) VALUES (?, ?, ?, ?, ?, ?)"
         getConnection().use { connection: Connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
+            connection.prepareStatement(sql2).use { preparedStatement ->
                 for (residenceInfo in residenceInfos) {
                     preparedStatement.setString(1, residenceInfo.residenceName)
                     preparedStatement.setString(2, residenceInfo.ownerUUID)
@@ -107,24 +113,21 @@ object ResidenceMySQLStorage {
         }
     }
 
+    private val sq3 = "DELETE FROM $table WHERE residence_name = ? LIMIT 1"
     fun removeResidence(residenceName: String): Boolean {
-        val table = tablePrefix + "residences"
-        val sql = "DELETE FROM $table WHERE residence_name = ?"
         getConnection().use { connection: Connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
+            connection.prepareStatement(sq3).use { preparedStatement ->
                 preparedStatement.setString(1, residenceName)
                 return preparedStatement.executeUpdate() > 0
             }
         }
     }
 
-
+    private val sql4 = "SELECT * FROM $table WHERE residence_name = ? LIMIT 1"
     fun getResidence(residenceName: String): ResidenceInfo? {
         var residenceInfo: ResidenceInfo? = null
-        val table = tablePrefix + "residences"
-        val sql = "SELECT * FROM $table WHERE residence_name = ?"
         getConnection().use { connection: Connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
+            connection.prepareStatement(sql4).use { preparedStatement ->
                 preparedStatement.setString(1, residenceName)
                 val resultSet = preparedStatement.executeQuery()
                 if (resultSet.next()) {
@@ -143,20 +146,17 @@ object ResidenceMySQLStorage {
                         resultSet.getString("server_name")
                     )
                 }
-                preparedStatement.connection.close()
             }
         }
         return residenceInfo
     }
 
+    private val sql5 = "SELECT * FROM $table"
     fun getResidences(): List<ResidenceInfo> {
-        val list = ArrayList<ResidenceInfo>()
-
-        val table = tablePrefix + "residences"
-        val sql = "SELECT * FROM $table"
+        val list = mutableListOf<ResidenceInfo>()
         getConnection().use { connection: Connection ->
             connection.createStatement().use { statement ->
-                statement.executeQuery(sql).use { resultSet ->
+                statement.executeQuery(sql5).use { resultSet ->
                     while (resultSet.next()) {
                         val residenceInfo = ResidenceInfo(
                             resultSet.getString("residence_name"),
@@ -174,36 +174,32 @@ object ResidenceMySQLStorage {
                         )
                         list.add(residenceInfo)
                     }
+                    return list
                 }
             }
         }
-        return list
     }
 
+    private val sql6 = "SELECT residence_name FROM $table"
     fun getResidenceNames(): List<String> {
         val list = mutableListOf<String>()
-
-        val table = tablePrefix + "residences"
-        val sql = "SELECT residence_name FROM $table"
         getConnection().use { connection: Connection ->
             connection.createStatement().use { statement ->
-                statement.executeQuery(sql).use { resultSet ->
+                statement.executeQuery(sql6).use { resultSet ->
                     while (resultSet.next()) {
                         val residenceName = resultSet.getString("residence_name")
                         list.add(residenceName)
                     }
+                    return list
                 }
             }
         }
-
-        return list
     }
 
+    private val sql7 = "SELECT residence_name FROM $table WHERE residence_name LIKE ? LIMIT 1"
     fun hasResidenceName(residenceName: String): Boolean {
-        val table = tablePrefix + "residences"
-        val sql = "SELECT residence_name FROM $table WHERE residence_name LIKE ?"
         getConnection().use { connection: Connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
+            connection.prepareStatement(sql7).use { preparedStatement ->
                 preparedStatement.setString(1, residenceName)
                 val resultSet = preparedStatement.executeQuery()
                 return resultSet.next()
@@ -211,11 +207,10 @@ object ResidenceMySQLStorage {
         }
     }
 
-    fun hasOwnerUUIDResidenceName(ownerUUID: UUID, residenceName: String): Boolean {
-        val table = tablePrefix + "residences"
-        val sql = "SELECT EXISTS (SELECT 1 FROM $table WHERE owner_uuid = ? AND residence_name = ?)"
+    private val sql8 = "SELECT EXISTS (SELECT 1 FROM $table WHERE owner_uuid = ? AND residence_name = ?) LIMIT 1"
+    fun hasOwnerResidenceName(ownerUUID: UUID, residenceName: String): Boolean {
         getConnection().use { connection: Connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
+            connection.prepareStatement(sql8).use { preparedStatement ->
                 preparedStatement.setString(1, ownerUUID.toString())
                 preparedStatement.setString(2, residenceName)
                 preparedStatement.executeQuery().use { resultSet ->
@@ -225,12 +220,11 @@ object ResidenceMySQLStorage {
         }
     }
 
-    fun getOwnerUUIDResidenceNames(ownerUUID: UUID): List<String> {
-        val table = tablePrefix + "residences"
-        val sql = "SELECT residence_name FROM $table WHERE owner_uuid = ?"
+    private val sql9 = "SELECT residence_name FROM $table WHERE owner_uuid = ?"
+    fun getOwnerResidenceNames(ownerUUID: UUID): List<String> {
         val list: MutableList<String> = ArrayList()
         getConnection().use { connection: Connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
+            connection.prepareStatement(sql9).use { preparedStatement ->
                 preparedStatement.setString(1, ownerUUID.toString())
                 preparedStatement.executeQuery().use { resultSet ->
                     while (resultSet.next()) {
@@ -243,12 +237,11 @@ object ResidenceMySQLStorage {
         return list
     }
 
+    private val sql10 = "SELECT residence_name FROM $table WHERE owner = ?"
     fun getOwnerResidenceNames(owner: String): List<String> {
-        val table = tablePrefix + "residences"
-        val sql = "SELECT residence_name FROM $table WHERE owner = ?"
         val list: MutableList<String> = ArrayList()
         getConnection().use { connection: Connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
+            connection.prepareStatement(sql10).use { preparedStatement ->
                 preparedStatement.setString(1, owner)
                 preparedStatement.executeQuery().use { resultSet ->
                     while (resultSet.next()) {
@@ -261,13 +254,11 @@ object ResidenceMySQLStorage {
         return list
     }
 
-    fun getOwnerUUIDResidences(ownerUUID: UUID): List<ResidenceInfo> {
+    private val sql11 = "SELECT residence_name, owner_uuid, owner, residence_flags, player_flags, server_name FROM $table WHERE owner_uuid = ?"
+    fun getOwnerResidences(ownerUUID: UUID): List<ResidenceInfo> {
         val list: MutableList<ResidenceInfo> = ArrayList()
-        val table = tablePrefix + "residences"
-        val sql =
-            "SELECT residence_name, owner_uuid, owner, residence_flags, player_flags, server_name FROM $table WHERE owner_uuid = ?"
         getConnection().use { connection: Connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
+            connection.prepareStatement(sql11).use { preparedStatement ->
                 preparedStatement.setString(1, ownerUUID.toString())
                 preparedStatement.executeQuery().use { resultSet ->
                     while (resultSet.next()) {
@@ -294,13 +285,11 @@ object ResidenceMySQLStorage {
         return list
     }
 
+    private val sql12 = "SELECT residence_name, owner_uuid, owner, residence_flags, player_flags, server_name FROM $table WHERE owner = ?"
     fun getOwnerResidences(owner: String): List<ResidenceInfo> {
         val list: MutableList<ResidenceInfo> = ArrayList()
-        val table = tablePrefix + "residences"
-        val sql =
-            "SELECT residence_name, owner_uuid, owner, residence_flags, player_flags, server_name FROM $table WHERE owner = ?"
         getConnection().use { connection: Connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
+            connection.prepareStatement(sql12).use { preparedStatement ->
                 preparedStatement.setString(1, owner)
                 preparedStatement.executeQuery().use { resultSet ->
                     while (resultSet.next()) {
@@ -327,12 +316,10 @@ object ResidenceMySQLStorage {
         return list
     }
 
-    fun changeOwner(residenceName: String, ownerUUID: UUID, owner: String): Boolean {
-        val table = tablePrefix + "residences"
-        val sql = "UPDATE $table SET uuid = ?, owner = ? WHERE residence_name = ?"
-
+    private val sql13 = "UPDATE $table SET uuid = ?, owner = ? WHERE residence_name = ?  LIMIT 1"
+    fun updateResidenceOwner(residenceName: String, ownerUUID: UUID, owner: String): Boolean {
         getConnection().use { connection: Connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
+            connection.prepareStatement(sql13).use { preparedStatement ->
                 preparedStatement.setString(1, ownerUUID.toString())
                 preparedStatement.setString(2, owner)
                 preparedStatement.setString(3, residenceName)
@@ -341,11 +328,10 @@ object ResidenceMySQLStorage {
         }
     }
 
-    fun changeName(oldName: String, newName: String): Boolean {
-        val table = tablePrefix + "residences"
-        val sql = "UPDATE $table SET residence_name = ? WHERE residence_name = ?"
+    private val sql14 = "UPDATE $table SET residence_name = ? WHERE residence_name = ?  LIMIT 1"
+    fun updateResidenceName(oldName: String, newName: String): Boolean {
         getConnection().use { connection: Connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
+            connection.prepareStatement(sql14).use { preparedStatement ->
                 preparedStatement.setString(1, newName)
                 preparedStatement.setString(2, oldName)
                 return preparedStatement.executeUpdate() > 0
@@ -353,72 +339,48 @@ object ResidenceMySQLStorage {
         }
     }
 
-    private val regexFlagName = Regex("[a-zA-Z0-9]+")
     fun setResidenceFlags(residenceName: String, key: String, value: Boolean): Boolean {
-        if (!key.matches(regexFlagName)) {
-            return false
-        }
-
-        val table = tablePrefix + "residences"
-        val sql = "UPDATE $table SET residence_flags = JSON_SET(residence_flags, '$.$key', ?) WHERE residence_name = ?"
+        val sql = "UPDATE $table SET residence_flags = JSON_SET(residence_flags, ?, ?) WHERE residence_name = ? LIMIT 1"
         getConnection().use { connection: Connection ->
             connection.prepareStatement(sql).use { preparedStatement ->
-                preparedStatement.setString(1, value.toString())
-                preparedStatement.setString(2, residenceName)
+                preparedStatement.setString(1,"$.\"$key\"")
+                preparedStatement.setString(2, value.toString())
+                preparedStatement.setString(3, residenceName)
                 return preparedStatement.executeUpdate() > 0
             }
         }
     }
 
     fun removeResidenceFlags(residenceName: String, key: String): Boolean {
-        if (!key.matches(regexFlagName)) {
-            return false
-        }
-
-        val table = tablePrefix + "residences"
-        val sql = "UPDATE $table SET residence_flags = JSON_REMOVE(residence_flags, '$.$key') WHERE residence_name = ?"
+        val sql = "UPDATE $table SET residence_flags = JSON_REMOVE(residence_flags, ?) WHERE residence_name = ? LIMIT 1"
         getConnection().use { connection: Connection ->
             connection.prepareStatement(sql).use { preparedStatement ->
-                preparedStatement.setString(1, residenceName)
-                return preparedStatement.executeUpdate() > 0
-            }
-        }
-    }
-
-    private val regexPlayerUUID = Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-    fun setPlayerFlags(residenceName: String, playerUUID: UUID, key: String, value: Boolean): Boolean {
-        if (!playerUUID.toString().matches(regexPlayerUUID)) {
-            return false
-        }
-        if (!key.matches(regexFlagName)) {
-            return false
-        }
-        val table = tablePrefix + "residences"
-        val sql =
-            "UPDATE $table SET player_flags = JSON_SET(player_flags, '$.$playerUUID.$key', ?) WHERE residence_name = ?"
-        getConnection().use { connection: Connection ->
-            connection.prepareStatement(sql).use { preparedStatement ->
-                preparedStatement.setString(1, value.toString())
+                preparedStatement.setString(1,"$.\"$key\"")
                 preparedStatement.setString(2, residenceName)
                 return preparedStatement.executeUpdate() > 0
             }
         }
     }
 
-    fun removePlayerFlags(residenceName: String, playerUUID: UUID, key: String): Boolean {
-        if (!playerUUID.toString().matches(regexPlayerUUID)) {
-            return false
-        }
-        if (!key.matches(regexFlagName)) {
-            return false
-        }
-
-        val table = tablePrefix + "residences"
-        val sql =
-            "UPDATE $table SET player_flags = JSON_REMOVE(player_flags, '$.$playerUUID.$key') WHERE residence_name = ?"
+    fun setPlayerFlags(residenceName: String, playerUUID: UUID, key: String, value: Boolean): Boolean {
+        val sql = "UPDATE $table SET player_flags = JSON_SET(player_flags, ?, ?) WHERE residence_name = ? LIMIT 1"
         getConnection().use { connection: Connection ->
             connection.prepareStatement(sql).use { preparedStatement ->
-                preparedStatement.setString(1, residenceName)
+                preparedStatement.setString(1,"$.\"$playerUUID.$key\"")
+                preparedStatement.setString(2, value.toString())
+                preparedStatement.setString(3, residenceName)
+                return preparedStatement.executeUpdate() > 0
+            }
+        }
+    }
+
+
+    fun removePlayerFlags(residenceName: String, playerUUID: UUID, key: String): Boolean {
+        val sql = "UPDATE $table SET player_flags = JSON_REMOVE(player_flags, ?) WHERE residence_name = ? LIMIT 1"
+        getConnection().use { connection: Connection ->
+            connection.prepareStatement(sql).use { preparedStatement ->
+                preparedStatement.setString(1,"$.\"$playerUUID.$key\"")
+                preparedStatement.setString(2, residenceName)
                 return preparedStatement.executeUpdate() > 0
             }
         }

@@ -21,12 +21,7 @@ import java.time.Duration
 
 object ResidenceStorageTabExecutor : TabExecutor {
 
-    override fun onCommand(
-        sender: CommandSender,
-        command: Command,
-        label: String,
-        arguments: Array<out String>
-    ): Boolean {
+    override fun onCommand(sender: CommandSender, command: Command, label: String, arguments: Array<out String>): Boolean {
         when (arguments.size) {
             0 -> {
                 if (suggestion("help", "help", sender)) {
@@ -46,7 +41,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
                                 processList(player, player.displayName, "1")
                             })
                         }
-                            ?: sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.only-player-execute"))
+                            ?: sender.sendMessage(MessageYAMLStorage.configuration.getString("command.only-player-execute"))
                     }
 
                     suggestion(arguments[0], "listall", sender) -> {
@@ -61,16 +56,18 @@ object ResidenceStorageTabExecutor : TabExecutor {
                                 processImport(player)
                             })
                         }
-                            ?: sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.only-player-execute"))
+                            ?: sender.sendMessage(MessageYAMLStorage.configuration.getString("command.only-player-execute"))
                     }
 
                     suggestion(arguments[0], "reload", sender) -> {
                         Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
-                            ConfigurationYAMLStorage.initialization(ResidenceStorageSpigotMain.instance.dataFolder)
+                            ConfigurationYAMLStorage.initialize(ResidenceStorageSpigotMain.instance.dataFolder)
                             ConfigurationYAMLStorage.load()
-                            MessageYAMLStorage.initialization(ResidenceStorageSpigotMain.instance.dataFolder)
+                            MessageYAMLStorage.initialize(ResidenceStorageSpigotMain.instance.dataFolder)
                             MessageYAMLStorage.load()
-                            sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.reload"))
+                            ResidenceMySQLStorage.initialize(ResidenceStorageSpigotMain.instance.dataFolder)
+                            ResidenceMySQLStorage.load()
+                            sender.sendMessage(MessageYAMLStorage.configuration.getString("command.reload"))
                         })
                     }
                 }
@@ -114,12 +111,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
         return true
     }
 
-    override fun onTabComplete(
-        sender: CommandSender,
-        command: Command,
-        label: String,
-        arguments: Array<out String>
-    ): List<String>? {
+    override fun onTabComplete(sender: CommandSender, command: Command, label: String, arguments: Array<out String>): List<String>? {
         when (arguments.size) {
             1 -> {
                 return listMatches(arguments[0], listOf("help", "list", "listall", "teleport", "import", "reload"))
@@ -169,10 +161,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
             return true
         }
         sender.sendMessage(
-            TextProcess.replace(
-                MessageYAMLStorage.fileConfiguration.getString("permission.no-permission")!!,
-                permission
-            )
+            TextProcess.replace(MessageYAMLStorage.configuration.getString("permission.no-permission")!!, permission)
         )
         return false
     }
@@ -189,7 +178,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
 
 
     private fun processHelp(sender: CommandSender) {
-        for (text in MessageYAMLStorage.fileConfiguration.getStringList("command.help")) {
+        for (text in MessageYAMLStorage.configuration.getStringList("command.help")) {
             sender.sendMessage(text)
         }
     }
@@ -205,16 +194,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
         for (residence in residenceManager.residences) {
             val value = residence.value
             localNames.add(value.residenceName)
-            residenceInfos.add(
-                ResidenceInfo(
-                    value.residenceName,
-                    value.ownerUUID.toString(),
-                    value.residenceName,
-                    value.permissions.flags,
-                    value.permissions.playerFlags,
-                    ResidenceStorageSpigotMain.serverName
-                )
-            )
+            residenceInfos.add(ResidenceInfo(value.residenceName, value.ownerUUID.toString(), value.residenceName, value.permissions.flags, value.permissions.playerFlags, ResidenceStorageSpigotMain.serverName))
         }
 
         val duplicates = mutableListOf<String>()
@@ -230,20 +210,20 @@ object ResidenceStorageTabExecutor : TabExecutor {
         if (duplicates.isNotEmpty()) {
             player.sendMessage(
                 TextProcess.replace(
-                    MessageYAMLStorage.fileConfiguration.getString("command.import-conflict")!!,
+                    MessageYAMLStorage.configuration.getString("command.import-conflict")!!,
                     duplicates.toString()
                 )
             )
         } else {
             ResidenceMySQLStorage.addResidences(residenceInfos)
-            player.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.import-complete"))
+            player.sendMessage(MessageYAMLStorage.configuration.getString("command.import-complete"))
         }
     }
 
 
     private fun processList(sender: CommandSender, playerName: String, pageString: String) {
         val page: Int = pageString.toIntOrNull() ?: run {
-            sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.page-invalid"))
+            sender.sendMessage(MessageYAMLStorage.configuration.getString("command.page-invalid"))
             return
         }
 
@@ -251,7 +231,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
         if (names.isEmpty()) {
             sender.sendMessage(
                 TextProcess.replace(
-                    MessageYAMLStorage.fileConfiguration.getString("command.player-page-no-residence")!!,
+                    MessageYAMLStorage.configuration.getString("command.player-page-no-residence")!!,
                     playerName
                 )
             )
@@ -278,18 +258,18 @@ object ResidenceStorageTabExecutor : TabExecutor {
         if (page !in 1..list.size) {
             sender.sendMessage(
                 TextProcess.replace(
-                    MessageYAMLStorage.fileConfiguration.getString("command.player-page-no")!!, page.toString()
+                    MessageYAMLStorage.configuration.getString("command.player-page-no")!!, page.toString()
                 )
             )
             return
         }
 
-        sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.player-page-header"))
+        sender.sendMessage(MessageYAMLStorage.configuration.getString("command.player-page-header"))
 
         // 发送当前页的列表
         for (name in list[page - 1]) {
             val text = TextProcess.replace(
-                MessageYAMLStorage.fileConfiguration.getString("command.player-page-list")!!,
+                MessageYAMLStorage.configuration.getString("command.player-page-list")!!,
                 name,
                 playerName
             )
@@ -303,7 +283,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
         // val nextPage = minOf(list.size, page + 1)
 
         // 发送页脚
-        val footerMessage = MessageYAMLStorage.fileConfiguration.getString("command.player-page-footer")!!
+        val footerMessage = MessageYAMLStorage.configuration.getString("command.player-page-footer")!!
         val text = TextProcess.replace(
             footerMessage,
             playerName,
@@ -319,13 +299,13 @@ object ResidenceStorageTabExecutor : TabExecutor {
 
     private fun processAllList(sender: CommandSender, pageString: String) {
         val page: Int = pageString.toIntOrNull() ?: run {
-            sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.page-invalid"))
+            sender.sendMessage(MessageYAMLStorage.configuration.getString("command.page-invalid"))
             return
         }
 
         val residenceInfos = ResidenceMySQLStorage.getResidences()
         if (residenceInfos.isEmpty()) {
-            sender.sendMessage(TextProcess.replace(MessageYAMLStorage.fileConfiguration.getString("command.all-page-no-residence")!!))
+            sender.sendMessage(TextProcess.replace(MessageYAMLStorage.configuration.getString("command.all-page-no-residence")!!))
             return
         }
 
@@ -347,19 +327,19 @@ object ResidenceStorageTabExecutor : TabExecutor {
         if (page !in 1..ResidencePage.allPage.size) {
             sender.sendMessage(
                 TextProcess.replace(
-                    MessageYAMLStorage.fileConfiguration.getString("command.player-page-no")!!, page.toString()
+                    MessageYAMLStorage.configuration.getString("command.player-page-no")!!, page.toString()
                 )
             )
             return
         }
 
-        sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.all-page-header"))
+        sender.sendMessage(MessageYAMLStorage.configuration.getString("command.all-page-header"))
 
         // 发送当前页的列表
         for (name in ResidencePage.allPage[page - 1]) {
             val value = name.value
             val text = TextProcess.replace(
-                MessageYAMLStorage.fileConfiguration.getString("command.all-page-list")!!,
+                MessageYAMLStorage.configuration.getString("command.all-page-list")!!,
                 name.key,
                 value.owner,
                 value.serverName
@@ -369,7 +349,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
         }
 
         // 发送页脚
-        val footerMessage = MessageYAMLStorage.fileConfiguration.getString("command.all-page-footer")!!
+        val footerMessage = MessageYAMLStorage.configuration.getString("command.all-page-footer")!!
         val text = TextProcess.replace(
             footerMessage,
             page.toString(),
@@ -388,14 +368,14 @@ object ResidenceStorageTabExecutor : TabExecutor {
     private fun processTeleport(sender: CommandSender, playerName: String, residenceName: String) {
 
         val player = Bukkit.getOnlinePlayers().firstOrNull() ?: run {
-            sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.teleport-no-online-player"))
+            sender.sendMessage(MessageYAMLStorage.configuration.getString("command.teleport-no-online-player"))
             return
         }
 
         if (playerName !in ResidenceStorageSpigotMain.playerNames) {
             sender.sendMessage(
                 TextProcess.replace(
-                    MessageYAMLStorage.fileConfiguration.getString("command.player-does-not-exist")!!,
+                    MessageYAMLStorage.configuration.getString("command.player-does-not-exist")!!,
                     playerName
                 )
             )
@@ -405,7 +385,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
         val residenceInfo = ResidenceMySQLStorage.getResidence(residenceName) ?: run {
             sender.sendMessage(
                 TextProcess.replace(
-                    MessageYAMLStorage.fileConfiguration.getString("command.teleport-no-residence")!!,
+                    MessageYAMLStorage.configuration.getString("command.teleport-no-residence")!!,
                     residenceName
                 )
             )
@@ -448,7 +428,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
             byteArrayOutputStream.toByteArray()
         )
 
-        sender.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.teleport"))
+        sender.sendMessage(MessageYAMLStorage.configuration.getString("command.teleport"))
     }
 
 }

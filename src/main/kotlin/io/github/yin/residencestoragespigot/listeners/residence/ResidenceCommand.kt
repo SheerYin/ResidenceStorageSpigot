@@ -66,17 +66,17 @@ object ResidenceCommand : Listener {
         val list = ResidencePage.playerPage[playerName] ?: run {
             player.sendMessage(
                 TextProcess.replace(
-                    MessageYAMLStorage.fileConfiguration.getString("command.player-page-no-residence")!!,
+                    MessageYAMLStorage.configuration.getString("command.player-page-no-residence")!!,
                     playerName
                 )
             )
             return
         }
 
-        player.sendMessage(MessageYAMLStorage.fileConfiguration.getString("command.player-page-header"))
+        player.sendMessage(MessageYAMLStorage.configuration.getString("command.player-page-header"))
         for (name in list[0]) {
             val text = TextProcess.replace(
-                MessageYAMLStorage.fileConfiguration.getString("command.player-page-list")!!,
+                MessageYAMLStorage.configuration.getString("command.player-page-list")!!,
                 name,
                 playerName
             )
@@ -85,7 +85,7 @@ object ResidenceCommand : Listener {
         }
 
         val text = TextProcess.replace(
-            MessageYAMLStorage.fileConfiguration.getString("command.player-page-footer")!!,
+            MessageYAMLStorage.configuration.getString("command.player-page-footer")!!,
             playerName,
             "1",
             (list.size).toString(),
