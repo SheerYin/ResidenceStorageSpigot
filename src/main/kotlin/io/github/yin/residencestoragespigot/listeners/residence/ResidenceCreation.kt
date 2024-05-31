@@ -26,11 +26,11 @@ object ResidenceCreation : Listener {
         val player = event.player
         val residenceName = event.residenceName
 
-        if (ResidenceMySQLStorage.getResidenceNames().contains(residenceName)) {
-            player.sendMessage(MessageYAMLStorage.configuration.getString("command.create-name-already-exists"))
-            event.isCancelled = true
-            return
-        }
+//        if (ResidenceMySQLStorage.getResidenceNames().contains(residenceName)) {
+//            player.sendMessage(MessageYAMLStorage.configuration.getString("command.create-name-already-exists"))
+//            event.isCancelled = true
+//            return
+//        }
 
         val names = ResidenceMySQLStorage.getOwnerResidenceNames(player.uniqueId)
         // 玩家领地总数有没有大于 config 的 residences.amount 权限

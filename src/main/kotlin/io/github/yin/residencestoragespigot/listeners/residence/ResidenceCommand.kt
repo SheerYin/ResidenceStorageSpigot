@@ -51,6 +51,17 @@ object ResidenceCommand : Listener {
                 }
             }
         }
+
+        //防管理员
+        if (command == "resadmin") {
+            if (arguments.size == 2 && arguments[0] == "create") {
+                if (ResidenceMySQLStorage.getResidenceNames().contains(arguments[1])) {
+                    player.sendMessage(MessageYAMLStorage.configuration.getString("command.create-name-already-exists"))
+                    event.isCancelled = true
+                    return
+                }
+            }
+        }
     }
 
 
