@@ -25,12 +25,14 @@ ResidenceStorageSpigot 是一个通过 MySQL 存储 Residence 数据的 Spigot �
    git clone https://github.com/SheerYin/ResidenceStorageSpigot.git
    ```
 2. 导入项目到您的开发环境。
-3. 根据需求修改 `build.gradle.kts` 文件。
-4. 使用 Gradle 构建项目：
+3. 在根目录新建 libraries 文件夹
+4. 放入最新版本 Residence 并重命名为 Residence.jar
+5. 根据需求修改 `build.gradle.kts` 文件。
+6. 使用 Gradle 构建项目：
    ```bash
    ./gradlew build
    ```
-5. 将生成的 jar 文件放置到 Spigot 服务器的插件目录中。
+7. 将生成的 jar 文件放置到 Spigot 服务器的插件目录中。
 
 ## 使用
 1. 将插件放入服务器并启动，忽略报错。
