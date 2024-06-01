@@ -3,12 +3,14 @@ package io.github.yin.residencestoragespigot.listeners.residence
 import com.bekvon.bukkit.residence.Residence
 import com.bekvon.bukkit.residence.event.ResidenceCommandEvent
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
+import io.github.yin.residencestoragespigot.storages.ConfigurationYAMLStorage
 import io.github.yin.residencestoragespigot.storages.MessageYAMLStorage
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
 import io.github.yin.residencestoragespigot.supports.ResidencePage
 import io.github.yin.residencestoragespigot.supports.TextProcess
 import kotlinx.coroutines.launch
 import net.md_5.bungee.chat.ComponentSerializer
+import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -41,8 +43,23 @@ object ResidenceCommand : Listener {
                             teleport(player, arguments[1], event)
                         }
                         arguments[0].lowercase() == "create" -> {
-                            if (ResidenceMySQLStorage.getResidenceNames().contains(arguments[1])) {
+                            val names = ResidenceMySQLStorage.getResidenceNames().map { it.lowercase(Locale.getDefault()) }
+                            if (arguments[1].lowercase() in names) {
                                 player.sendMessage(MessageYAMLStorage.configuration.getString("command.create-name-already-exists"))
+                                event.isCancelled = true
+                                return
+                            }
+                            val self = ResidenceMySQLStorage.getOwnerResidenceNames(player.uniqueId)
+                            // 玩家领地总数有没有大于 config 的 residences.amount 权限
+                            val number = numberPermissions(player)
+                            if (self.size >= number) {
+                                player.sendMessage(
+                                    TextProcess.replace(
+                                        MessageYAMLStorage.configuration.getString("command.create-amount-limit")!!,
+                                        (self.size).toString(),
+                                        number.toString()
+                                    )
+                                )
                                 event.isCancelled = true
                                 return
                             }
@@ -55,13 +72,28 @@ object ResidenceCommand : Listener {
         //防管理员
         if (command == "resadmin") {
             if (arguments.size == 2 && arguments[0] == "create") {
-                if (ResidenceMySQLStorage.getResidenceNames().contains(arguments[1])) {
+                val names = ResidenceMySQLStorage.getResidenceNames().map { it.lowercase(Locale.getDefault()) }
+                if (arguments[1].lowercase() in names) {
                     player.sendMessage(MessageYAMLStorage.configuration.getString("command.create-name-already-exists"))
                     event.isCancelled = true
                     return
                 }
             }
         }
+    }
+
+
+    private fun numberPermissions(player: Player): Int {
+        val section: ConfigurationSection = ConfigurationYAMLStorage.configuration.getConfigurationSection("residence.amount")!!
+        val map: Map<String, Int> = section.getKeys(false).associateBy({ it }, { section.getInt(it) })
+
+        val sorted = map.entries.sortedByDescending { it.value }
+        for (entry in sorted) {
+            if (player.hasPermission("residencestoragespigot.amount." + entry.key)) {
+                return entry.value
+            }
+        }
+        return 0
     }
 
 

@@ -308,7 +308,7 @@ object ResidenceMySQLStorage {
     }
 
     fun updateResidenceOwner(residenceName: String, ownerUUID: UUID, owner: String): Boolean {
-        val sql13 = "UPDATE $table SET uuid = ?, owner = ? WHERE residence_name = ? LIMIT 1"
+        val sql13 = "UPDATE $table SET owner_uuid = ?, owner = ? WHERE residence_name = ? LIMIT 1"
         getConnection().use { connection: Connection ->
             connection.prepareStatement(sql13).use { preparedStatement ->
                 preparedStatement.setString(1, ownerUUID.toString())

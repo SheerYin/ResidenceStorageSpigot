@@ -61,8 +61,6 @@ object ResidenceStorageTabExecutor : TabExecutor {
                             ConfigurationYAMLStorage.load()
                             MessageYAMLStorage.initialize(ResidenceStorageSpigotMain.instance.dataFolder)
                             MessageYAMLStorage.load()
-                            ResidenceMySQLStorage.initialize(ResidenceStorageSpigotMain.instance.dataFolder)
-                            ResidenceMySQLStorage.load()
                             sender.sendMessage(MessageYAMLStorage.configuration.getString("command.reload"))
                         }
                     }
