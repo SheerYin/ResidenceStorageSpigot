@@ -45,7 +45,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
                     }
                     suggestion(sender, arguments[0], "listall") -> {
                         ResidenceStorageSpigotMain.scope.launch {
-                            processAllList(sender, "1")
+                            processListAll(sender, "1")
                         }
                     }
                     suggestion(sender, arguments[0], "import") -> {
@@ -75,7 +75,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
                     }
                     suggestion(sender, arguments[0], "listall") -> {
                         Bukkit.getScheduler().runTaskAsynchronously(ResidenceStorageSpigotMain.instance, Runnable {
-                            processAllList(sender, arguments[1])
+                            processListAll(sender, arguments[1])
                         })
                     }
                 }
@@ -279,7 +279,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
     }
 
 
-    private fun processAllList(sender: CommandSender, pageString: String) {
+    private fun processListAll(sender: CommandSender, pageString: String) {
         val page: Int = pageString.toIntOrNull() ?: run {
             sender.sendMessage(MessageYAMLStorage.configuration.getString("command.page-invalid"))
             return
@@ -324,7 +324,8 @@ object ResidenceStorageTabExecutor : TabExecutor {
                 MessageYAMLStorage.configuration.getString("command.all-page-list")!!,
                 name.key,
                 value.owner,
-                value.serverName
+                value.serverName,
+                sender.name
             )
             val baseComponents = ComponentSerializer.parse(text)
             sender.spigot().sendMessage(*baseComponents)

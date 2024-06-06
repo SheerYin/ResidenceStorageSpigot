@@ -1,7 +1,7 @@
 command:
   help:
     - §f[§7领地储存§f] 主命令 /residencestoragespigot 缩写 /rs
-    - §f[§7领地储存§f] 玩家列表 /re list [玩家] [页]
+    - §f[§7领地储存§f] 玩家列表 /rs list [玩家] [页]
     - §f[§7领地储存§f] 所有列表 /rs listall [页]
     - §f[§7领地储存§f] 传送领地 /rs teleport <玩家> <领地>
     - §f[§7领地储存§f] 导入数据 /rs import
@@ -15,32 +15,28 @@ command:
   player-page-no-residence: '§f[§7领地储存§f] 玩家 {0} 没有领地'
   player-page-no: '§f[§7领地储存§f] 没有 {0} 页'
   player-page-header: ''
-  player-page-list: >
-    [""
+  player-page-list: '[""
     ,{"text":"§f[§7领地储存§f] 领地 {0} 所有者 {1}","clickEvent":{"action":"run_command","value":"/residence tp {0}"},"hoverEvent":{"action":"show_text","contents":"§f[左键单击]\n传送"}}
-    ]
-  player-page-footer: >
-    [""
+    ]'
+  player-page-footer: '[""
     ,{"text":"§f[§7领地储存§f] "}
     ,{"text":"[上一页] ","clickEvent":{"action":"run_command","value":"/residencestoragespigot list {0} {3}"},"hoverEvent":{"action":"show_text","contents":"§f[左键单击]\n上一页"}}
     ,{"text":"{1} / {2}"}
     ,{"text":" [下一页]","clickEvent":{"action":"run_command","value":"/residencestoragespigot list {0} {4}"},"hoverEvent":{"action":"show_text","contents":"§f[左键单击]\n下一页"}}
-    ]
+    ]'
 
   all-page-no-residence: '§f[§7领地储存§f] 没有玩家创建领地'
   all-page-no: '§f[§7领地储存§f] 没有 {0} 页'
   all-page-header: ''
-  all-page-list: >
-    [""
-    ,{"text":"§f[§7领地储存§f] 领地 {0} 所有者 {1} 服务器 {2}","clickEvent":{"action":"run_command","value":"/residencestoragespigot teleport {0} {1}"},"hoverEvent":{"action":"show_text","contents":"§f[左键单击]\n传送"}}
-    ]
-  all-page-footer: >
-    [""
+  all-page-list: '[""
+    ,{"text":"§f[§7领地储存§f] 领地 {0} 所有者 {1} 服务器 {2}","clickEvent":{"action":"run_command","value":"/residencestoragespigot teleport {4} {0}"},"hoverEvent":{"action":"show_text","contents":"§f[左键单击]\n传送"}}
+    ]'
+  all-page-footer: '[""
     ,{"text":"§f[§7领地储存§f] "}
     ,{"text":"[上一页] ","clickEvent":{"action":"run_command","value":"/residencestoragespigot listall {2}"},"hoverEvent":{"action":"show_text","contents":"§f[左键单击]\n上一页"}}
     ,{"text":"{0} / {1}"}
     ,{"text":" [下一页]","clickEvent":{"action":"run_command","value":"/residencestoragespigot listall {3}"},"hoverEvent":{"action":"show_text","contents":"§f[左键单击]\n下一页"}}
-    ]
+    ]'
 
   teleport-no-online-player: '§f[§7领地储存§f] 执行此命令这个子服最少需要一个在线玩家'
   player-does-not-exist: '§f[§7领地储存§f] 玩家不存在或不在线'
