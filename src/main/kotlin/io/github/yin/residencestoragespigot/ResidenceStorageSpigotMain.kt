@@ -7,12 +7,10 @@ import io.github.yin.residencestoragespigot.listeners.residence.*
 import io.github.yin.residencestoragespigot.storages.ConfigurationYAMLStorage
 import io.github.yin.residencestoragespigot.storages.MessageYAMLStorage
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
+import io.github.yin.residencestoragespigot.supports.ResidenceStorageExpansion
 import kotlinx.coroutines.*
 import org.bukkit.Bukkit
-import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
-import java.io.ByteArrayOutputStream
-import java.io.DataOutputStream
 import java.util.concurrent.TimeUnit
 
 class ResidenceStorageSpigotMain : JavaPlugin() {
@@ -50,7 +48,7 @@ class ResidenceStorageSpigotMain : JavaPlugin() {
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             hookPlaceholderAPI = true
-            // BatchCommandExpansion(this).register()
+            ResidenceStorageExpansion(this).register()
         } else {
             server.consoleSender.sendMessage(pluginPrefix + "没有找到 PlaceholderAPI 无法提供解析 PlaceholderAPI 变量")
         }

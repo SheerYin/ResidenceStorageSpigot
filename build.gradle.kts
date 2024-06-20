@@ -50,7 +50,7 @@ bukkitPluginYaml {
     val pre = "${lowercaseName}.command"
     commands {
         register(lowercaseName) {
-            aliases = listOf("rs")
+            aliases = listOf("residencestorage", "rs")
             permission = pre
         }
     }

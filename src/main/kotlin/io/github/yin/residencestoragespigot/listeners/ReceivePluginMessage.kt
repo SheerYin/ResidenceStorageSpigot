@@ -36,7 +36,7 @@ object ReceivePluginMessage : PluginMessageListener {
                         target.teleport(claimedResidence.getTeleportLocation(target, true), PlayerTeleportEvent.TeleportCause.PLUGIN)
                     }
                 }
-                // PlayerList ALL a, b, c
+                // PlayerList ALL "a, b, c"
                 "PlayerList" -> {
                     if (input.readUTF() != "ALL") {
                         return
@@ -44,7 +44,7 @@ object ReceivePluginMessage : PluginMessageListener {
                     ResidenceStorageSpigotMain.playerNames.addAll(input.readUTF().split(", "))
                 }
                 /*
-                // GetServers a, b, c
+                // GetServers "a, b, c"
                 "GetServers" -> {
                     ResidenceStorageSpigotMain.serverNames.addAll(input.readUTF().split(", "))
                 }

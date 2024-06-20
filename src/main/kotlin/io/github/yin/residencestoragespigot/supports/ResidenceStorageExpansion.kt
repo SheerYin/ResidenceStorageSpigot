@@ -1,35 +1,41 @@
 package io.github.yin.residencestoragespigot.supports
 
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
+import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
 import me.clip.placeholderapi.expansion.PlaceholderExpansion
 import org.bukkit.OfflinePlayer
 import org.bukkit.plugin.Plugin
-import java.util.*
 
 class ResidenceStorageExpansion(plugin: Plugin) : PlaceholderExpansion() {
-    companion object {
-        val descriptionName = ResidenceStorageSpigotMain.instance.description.name.lowercase(Locale.getDefault())
-        val descriptionAuthors = ResidenceStorageSpigotMain.instance.description.authors.joinToString(",")
-        val descriptionVersion = ResidenceStorageSpigotMain.instance.description.version
-    }
 
     override fun getIdentifier(): String {
-        return descriptionName
+        return ResidenceStorageSpigotMain.lowercaseName
     }
 
     override fun getAuthor(): String {
-        return descriptionAuthors
+        return ResidenceStorageSpigotMain.pluginAuthors.joinToString(",")
     }
 
     override fun getVersion(): String {
-        return descriptionVersion
+        return ResidenceStorageSpigotMain.pluginVersion
+    }
+
+    override fun persist(): Boolean {
+        return true
     }
 
     override fun onRequest(offlinePlayer: OfflinePlayer?, parameters: String): String? {
-        if (parameters.equals("number", ignoreCase = true)) {
-
+        val player = (offlinePlayer?.player) ?: return null
+        return when {
+            parameters.equals("amount", ignoreCase = true) -> {
+                ResidenceMySQLStorage.getOwnerResidenceNames(player.uniqueId).size.toString()
+            }
+            parameters.equals("maximum", ignoreCase = true) -> {
+                Limit.numberPermissions(player).toString()
+            }
+            else -> {
+                null
+            }
         }
-
-        return null
     }
 }

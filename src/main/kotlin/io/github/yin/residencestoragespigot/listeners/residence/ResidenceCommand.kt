@@ -111,8 +111,8 @@ object ResidenceCommand : Listener {
         for (name in list[0]) {
             val text = IndexReplace.replace(
                 MessageYAMLStorage.configuration.getString("command.player-page-list")!!,
-                name,
-                playerName
+                playerName,
+                name
             )
             val baseComponents = ComponentSerializer.parse(text)
             player.spigot().sendMessage(*baseComponents)
@@ -122,9 +122,9 @@ object ResidenceCommand : Listener {
             MessageYAMLStorage.configuration.getString("command.player-page-footer")!!,
             playerName,
             "1",
-            (list.size).toString(),
             "0",
-            "2"
+            "2",
+            (list.size).toString()
         )
         val baseComponents = ComponentSerializer.parse(text)
         player.spigot().sendMessage(*baseComponents)

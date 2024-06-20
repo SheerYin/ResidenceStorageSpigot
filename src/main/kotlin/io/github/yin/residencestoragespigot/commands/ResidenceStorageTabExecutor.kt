@@ -315,7 +315,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
                 sender.name,
                 residence.key,
                 value.owner,
-                value.serverName,
+                value.serverName
             )
             val baseComponents = ComponentSerializer.parse(text)
             sender.spigot().sendMessage(*baseComponents)
@@ -384,6 +384,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
             output.writeUTF("residencestorage:identifier")
             val byte = ByteArrayOutputStream().apply {
                 DataOutputStream(this).run {
+                    writeUTF(playerName)
                     writeUTF(residenceName)
                     flush()
                 }
