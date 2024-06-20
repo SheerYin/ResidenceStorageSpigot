@@ -19,10 +19,18 @@ class ResidenceStorageSpigotMain : JavaPlugin() {
 
     companion object {
         lateinit var instance: ResidenceStorageSpigotMain
-        const val prefix = "§f[§7领地储存§f] "
+
+        lateinit var pluginName: String
+        lateinit var lowercaseName: String
+        lateinit var pluginVersion: String
+        lateinit var pluginAuthors: List<String>
+        lateinit var pluginPrefix: String
+
         const val pluginChannel = "BungeeCord"
 
         lateinit var scope: CoroutineScope
+
+        var hookPlaceholderAPI = false
 
         var serverName = ""
         var playerNames = mutableListOf<String>()
@@ -30,8 +38,22 @@ class ResidenceStorageSpigotMain : JavaPlugin() {
 
     override fun onEnable() {
         instance = this
+        pluginName = description.name
+        lowercaseName = pluginName.lowercase()
+        pluginVersion = description.version
+        pluginAuthors = description.authors
+        pluginPrefix = "§f[§7${description.prefix}§f] "
+
+        server.consoleSender.sendMessage(pluginPrefix + "插件开始加载 " + pluginVersion)
 
         scope = CoroutineScope(Dispatchers.IO)
+
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            hookPlaceholderAPI = true
+            // BatchCommandExpansion(this).register()
+        } else {
+            server.consoleSender.sendMessage(pluginPrefix + "没有找到 PlaceholderAPI 无法提供解析 PlaceholderAPI 变量")
+        }
 
         ConfigurationYAMLStorage.initialize(dataFolder)
         ConfigurationYAMLStorage.load()
@@ -53,43 +75,25 @@ class ResidenceStorageSpigotMain : JavaPlugin() {
         Bukkit.getPluginManager().registerEvents(ResidenceRename, this)
 
         getCommand("residencestoragespigot")?.setExecutor(ResidenceStorageTabExecutor)
-
-        server.consoleSender.sendMessage(prefix + "插件开始加载 " + description.version)
     }
 
     override fun onDisable() {
+        server.consoleSender.sendMessage(pluginPrefix + "插件开始卸载 " + pluginVersion)
+
         runBlocking {
             try {
                 withTimeout(TimeUnit.MINUTES.toMillis(1)) {
-                    server.consoleSender.sendMessage(prefix + "正在等待任务完成，最多等待 1 分钟")
+                    server.consoleSender.sendMessage(pluginPrefix + "正在等待任务完成，最多等待 1 分钟")
                     scope.coroutineContext[Job]?.children?.forEach { it.join() }
-                    server.consoleSender.sendMessage(prefix + "任务全部完成")
+                    server.consoleSender.sendMessage(pluginPrefix + "任务全部完成")
                 }
             } catch (exception: TimeoutCancellationException) {
-                server.consoleSender.sendMessage(prefix + "已超时，强制清理所有任务")
+                server.consoleSender.sendMessage(pluginPrefix + "已超时，强制清理所有任务")
                 scope.cancel()
             }
         }
 
         ResidenceMySQLStorage.close()
-        server.consoleSender.sendMessage(prefix + "插件开始卸载 " + description.version)
-    }
-
-    fun sendByteServerName(player: Player) {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        DataOutputStream(byteArrayOutputStream).use { output ->
-            output.writeUTF("GetServer")
-        }
-        player.sendPluginMessage(this, pluginChannel, byteArrayOutputStream.toByteArray())
-    }
-
-    fun sendBytePlayerNames(player: Player) {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        DataOutputStream(byteArrayOutputStream).use { output ->
-            output.writeUTF("PlayerList")
-            output.writeUTF("ALL")
-        }
-        player.sendPluginMessage(this, pluginChannel, byteArrayOutputStream.toByteArray())
     }
 
 

@@ -3,14 +3,13 @@ package io.github.yin.residencestoragespigot.listeners.residence
 import com.bekvon.bukkit.residence.Residence
 import com.bekvon.bukkit.residence.event.ResidenceCommandEvent
 import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
-import io.github.yin.residencestoragespigot.storages.ConfigurationYAMLStorage
 import io.github.yin.residencestoragespigot.storages.MessageYAMLStorage
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
+import io.github.yin.residencestoragespigot.supports.IndexReplace
+import io.github.yin.residencestoragespigot.supports.Limit
 import io.github.yin.residencestoragespigot.supports.ResidencePage
-import io.github.yin.residencestoragespigot.supports.TextProcess
 import kotlinx.coroutines.launch
 import net.md_5.bungee.chat.ComponentSerializer
-import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -51,10 +50,10 @@ object ResidenceCommand : Listener {
                             }
                             val self = ResidenceMySQLStorage.getOwnerResidenceNames(player.uniqueId)
                             // 玩家领地总数有没有大于 config 的 residences.amount 权限
-                            val number = numberPermissions(player)
+                            val number = Limit.numberPermissions(player)
                             if (self.size >= number) {
                                 player.sendMessage(
-                                    TextProcess.replace(
+                                    IndexReplace.replace(
                                         MessageYAMLStorage.configuration.getString("command.create-amount-limit")!!,
                                         (self.size).toString(),
                                         number.toString()
@@ -83,20 +82,6 @@ object ResidenceCommand : Listener {
     }
 
 
-    private fun numberPermissions(player: Player): Int {
-        val section: ConfigurationSection = ConfigurationYAMLStorage.configuration.getConfigurationSection("residence.amount")!!
-        val map: Map<String, Int> = section.getKeys(false).associateBy({ it }, { section.getInt(it) })
-
-        val sorted = map.entries.sortedByDescending { it.value }
-        for (entry in sorted) {
-            if (player.hasPermission("residencestoragespigot.amount." + entry.key)) {
-                return entry.value
-            }
-        }
-        return 0
-    }
-
-
     private fun listOne(player: Player, event: ResidenceCommandEvent) {
         val playerName = player.name
 
@@ -110,9 +95,11 @@ object ResidenceCommand : Listener {
             it.filter { char -> char.isDigit() }.toIntOrNull() ?: 0
         }, 10)
 
-        val list = ResidencePage.playerPage[playerName] ?: run {
+
+        val list = ResidencePage.playerPage[playerName]
+        if (list == null) {
             player.sendMessage(
-                TextProcess.replace(
+                IndexReplace.replace(
                     MessageYAMLStorage.configuration.getString("command.player-page-no-residence")!!,
                     playerName
                 )
@@ -122,7 +109,7 @@ object ResidenceCommand : Listener {
 
         player.sendMessage(MessageYAMLStorage.configuration.getString("command.player-page-header"))
         for (name in list[0]) {
-            val text = TextProcess.replace(
+            val text = IndexReplace.replace(
                 MessageYAMLStorage.configuration.getString("command.player-page-list")!!,
                 name,
                 playerName
@@ -131,7 +118,7 @@ object ResidenceCommand : Listener {
             player.spigot().sendMessage(*baseComponents)
         }
 
-        val text = TextProcess.replace(
+        val text = IndexReplace.replace(
             MessageYAMLStorage.configuration.getString("command.player-page-footer")!!,
             playerName,
             "1",

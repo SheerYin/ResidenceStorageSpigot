@@ -5,10 +5,7 @@ import io.github.yin.residencestoragespigot.ResidenceStorageSpigotMain
 import io.github.yin.residencestoragespigot.storages.ConfigurationYAMLStorage
 import io.github.yin.residencestoragespigot.storages.MessageYAMLStorage
 import io.github.yin.residencestoragespigot.storages.ResidenceMySQLStorage
-import io.github.yin.residencestoragespigot.supports.Cooldown
-import io.github.yin.residencestoragespigot.supports.ResidenceInfo
-import io.github.yin.residencestoragespigot.supports.ResidencePage
-import io.github.yin.residencestoragespigot.supports.TextProcess
+import io.github.yin.residencestoragespigot.supports.*
 import kotlinx.coroutines.launch
 import net.md_5.bungee.chat.ComponentSerializer
 import org.bukkit.Bukkit
@@ -27,7 +24,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
     override fun onCommand(sender: CommandSender, command: Command, label: String, arguments: Array<out String>): Boolean {
         when (arguments.size) {
             0 -> {
-                if(permissionMessage(sender, "$pluginName.command.help")) {
+                if(permissionMessage(sender, "${ResidenceStorageSpigotMain.lowercaseName}.command.help")) {
                     processHelp(sender)
                 }
             }
@@ -115,7 +112,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
                     arguments[0].equals("teleport", ignoreCase = true) -> {
                         if (Cooldown.globalUse(Duration.ofSeconds(5))) {
                             val player = Bukkit.getOnlinePlayers().firstOrNull() ?: return null
-                            ResidenceStorageSpigotMain.instance.sendBytePlayerNames(player)
+                            SendByte.playerNames(player)
                         }
                         return listMatches(arguments[1], ResidenceStorageSpigotMain.playerNames)
                     }
@@ -144,16 +141,15 @@ object ResidenceStorageTabExecutor : TabExecutor {
             return true
         }
         sender.sendMessage(
-            TextProcess.replace(MessageYAMLStorage.configuration.getString("permission.no-permission")!!, permission)
+            IndexReplace.replace(MessageYAMLStorage.configuration.getString("permission.no-permission")!!, permission)
         )
         return false
     }
 
-    private val pluginName = ResidenceStorageSpigotMain.instance.description.name.lowercase()
     private fun suggestion(sender: CommandSender, argument: String, vararg suggest: String): Boolean {
         val lowerCaseArgument = argument.lowercase(Locale.getDefault())
         if (lowerCaseArgument in suggest) {
-            return permissionMessage(sender, "$pluginName.command.$lowerCaseArgument")
+            return permissionMessage(sender, "${ResidenceStorageSpigotMain.lowercaseName}.command.$lowerCaseArgument")
         }
         return false
     }
@@ -191,7 +187,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
 
         if (duplicates.isNotEmpty()) {
             player.sendMessage(
-                TextProcess.replace(
+                IndexReplace.replace(
                     MessageYAMLStorage.configuration.getString("command.import-conflict")!!,
                     duplicates.toString()
                 )
@@ -212,7 +208,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
         val names = ResidenceMySQLStorage.getOwnerResidenceNames(playerName)
         if (names.isEmpty()) {
             sender.sendMessage(
-                TextProcess.replace(
+                IndexReplace.replace(
                     MessageYAMLStorage.configuration.getString("command.player-page-no-residence")!!,
                     playerName
                 )
@@ -239,7 +235,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
         // 判断页数是不是无效的
         if (page !in 1..list.size) {
             sender.sendMessage(
-                TextProcess.replace(
+                IndexReplace.replace(
                     MessageYAMLStorage.configuration.getString("command.player-page-no")!!, page.toString()
                 )
             )
@@ -249,11 +245,11 @@ object ResidenceStorageTabExecutor : TabExecutor {
         sender.sendMessage(MessageYAMLStorage.configuration.getString("command.player-page-header"))
 
         // 发送当前页的列表
-        for (name in list[page - 1]) {
-            val text = TextProcess.replace(
+        for (residenceName in list[page - 1]) {
+            val text = IndexReplace.replace(
                 MessageYAMLStorage.configuration.getString("command.player-page-list")!!,
-                name,
-                playerName
+                playerName,
+                residenceName
             )
             val baseComponents = ComponentSerializer.parse(text)
             sender.spigot().sendMessage(*baseComponents)
@@ -265,19 +261,17 @@ object ResidenceStorageTabExecutor : TabExecutor {
         // val nextPage = minOf(list.size, page + 1)
 
         // 发送页脚
-        val footerMessage = MessageYAMLStorage.configuration.getString("command.player-page-footer")!!
-        val text = TextProcess.replace(
-            footerMessage,
+        val text = IndexReplace.replace(
+            MessageYAMLStorage.configuration.getString("command.player-page-footer")!!,
             playerName,
             page.toString(),
-            list.size.toString(),
             (page - 1).toString(),
-            (page + 1).toString()
+            (page + 1).toString(),
+            list.size.toString(),
         )
         val baseComponents = ComponentSerializer.parse(text)
         sender.spigot().sendMessage(*baseComponents)
     }
-
 
     private fun processListAll(sender: CommandSender, pageString: String) {
         val page: Int = pageString.toIntOrNull() ?: run {
@@ -287,20 +281,16 @@ object ResidenceStorageTabExecutor : TabExecutor {
 
         val residenceInfos = ResidenceMySQLStorage.getResidences()
         if (residenceInfos.isEmpty()) {
-            sender.sendMessage(TextProcess.replace(MessageYAMLStorage.configuration.getString("command.all-page-no-residence")!!))
+            sender.sendMessage(IndexReplace.replace(MessageYAMLStorage.configuration.getString("command.all-page-no-residence")!!))
             return
         }
 
         if (ResidencePage.allPage.getOrNull(1) == null) {
-            val map: Map<String, ResidenceInfo> = residenceInfos.sortedBy { info ->
-                info.residenceName.filter { char -> char.isDigit() }.toIntOrNull() ?: 0
-            }.associateBy { it.residenceName }.toMutableMap()
+            val map: Map<String, ResidenceInfo> = residenceInfos.sortedBy { info -> info.residenceName.filter { char -> char.isDigit() }.toIntOrNull() ?: 0 }.associateBy { it.residenceName }.toMutableMap()
             ResidencePage.allPage = ResidencePage.allSplit(map, 10)
         } else {
             if (page == 1) {
-                val map: Map<String, ResidenceInfo> = residenceInfos.sortedBy { info ->
-                    info.residenceName.filter { char -> char.isDigit() }.toIntOrNull() ?: 0
-                }.associateBy { it.residenceName }.toMutableMap()
+                val map: Map<String, ResidenceInfo> = residenceInfos.sortedBy { info -> info.residenceName.filter { char -> char.isDigit() }.toIntOrNull() ?: 0 }.associateBy { it.residenceName }.toMutableMap()
                 ResidencePage.allPage = ResidencePage.allSplit(map, 10)
             }
         }
@@ -308,7 +298,7 @@ object ResidenceStorageTabExecutor : TabExecutor {
         // 判断页数是不是无效的
         if (page !in 1..ResidencePage.allPage.size) {
             sender.sendMessage(
-                TextProcess.replace(
+                IndexReplace.replace(
                     MessageYAMLStorage.configuration.getString("command.player-page-no")!!, page.toString()
                 )
             )
@@ -318,27 +308,26 @@ object ResidenceStorageTabExecutor : TabExecutor {
         sender.sendMessage(MessageYAMLStorage.configuration.getString("command.all-page-header"))
 
         // 发送当前页的列表
-        for (name in ResidencePage.allPage[page - 1]) {
-            val value = name.value
-            val text = TextProcess.replace(
+        for (residence in ResidencePage.allPage[page - 1]) {
+            val value = residence.value
+            val text = IndexReplace.replace(
                 MessageYAMLStorage.configuration.getString("command.all-page-list")!!,
-                name.key,
+                sender.name,
+                residence.key,
                 value.owner,
                 value.serverName,
-                sender.name
             )
             val baseComponents = ComponentSerializer.parse(text)
             sender.spigot().sendMessage(*baseComponents)
         }
 
         // 发送页脚
-        val footerMessage = MessageYAMLStorage.configuration.getString("command.all-page-footer")!!
-        val text = TextProcess.replace(
-            footerMessage,
+        val text = IndexReplace.replace(
+            MessageYAMLStorage.configuration.getString("command.all-page-footer")!!,
             page.toString(),
-            (ResidencePage.allPage.size).toString(),
             (page - 1).toString(),
-            (page + 1).toString()
+            (page + 1).toString(),
+            (ResidencePage.allPage.size).toString()
         )
         val baseComponents = ComponentSerializer.parse(text)
         sender.spigot().sendMessage(*baseComponents)
@@ -357,17 +346,14 @@ object ResidenceStorageTabExecutor : TabExecutor {
 
         if (playerName !in ResidenceStorageSpigotMain.playerNames) {
             sender.sendMessage(
-                TextProcess.replace(
-                    MessageYAMLStorage.configuration.getString("command.player-does-not-exist")!!,
-                    playerName
-                )
+                IndexReplace.replace(MessageYAMLStorage.configuration.getString("command.not-player")!!, playerName)
             )
             return
         }
 
         val residenceInfo = ResidenceMySQLStorage.getResidence(residenceName) ?: run {
             sender.sendMessage(
-                TextProcess.replace(
+                IndexReplace.replace(
                     MessageYAMLStorage.configuration.getString("command.teleport-no-residence")!!,
                     residenceName
                 )
